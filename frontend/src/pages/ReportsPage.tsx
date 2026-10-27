@@ -82,16 +82,16 @@ export const ReportsPage: React.FC = () => {
     fetchReports();
   }, []);
 
-  const BERRY_PALETTE = {
-    p1: '#8e3a59',
-    p2: '#a5617a',
-    p3: '#bb899b',
-    darkWine: '#752d48',
-    emerald: '#10b981',
-    amber: '#f59e0b',
-    rose: '#f43f5e',
-    sky: '#38bdf8',
-    slate: '#94a3b8',
+  const THEME_PALETTE = {
+    p1: '#2563EB',
+    p2: '#7C3AED',
+    p3: '#9CA3AF',
+    blueHover: '#1D4ED8',
+    emerald: '#10B981',
+    amber: '#F59E0B',
+    rose: '#EF4444',
+    sky: '#38BDF8',
+    slate: '#6B7280',
   };
 
   const supplierChartData = suppliers.map((s) => ({
@@ -124,10 +124,10 @@ export const ReportsPage: React.FC = () => {
 
   // Cost Allocation Donut Data
   const costDistribution = [
-    { name: 'Procurement Sourcing', value: 45, color: BERRY_PALETTE.p1 },
-    { name: 'Freight & Ocean Logistics', value: 25, color: BERRY_PALETTE.p2 },
-    { name: 'Inventory Carrying & Storage', value: 18, color: BERRY_PALETTE.emerald },
-    { name: 'SLA Buffer & Expedited Air', value: 12, color: BERRY_PALETTE.amber },
+    { name: 'Procurement Sourcing', value: 45, color: THEME_PALETTE.p1 },
+    { name: 'Freight & Ocean Logistics', value: 25, color: THEME_PALETTE.p2 },
+    { name: 'Inventory Carrying & Storage', value: 18, color: THEME_PALETTE.emerald },
+    { name: 'SLA Buffer & Expedited Air', value: 12, color: THEME_PALETTE.amber },
   ];
 
   // Trigger synthetic report export
@@ -182,7 +182,7 @@ END OF REPORT
         <div className="flex flex-wrap items-center gap-3">
           {/* Role Perspective Switcher (Admin / Procurement) */}
           {(userRole === 'ADMIN' || userRole === 'PROCUREMENT') && (
-            <div className="flex items-center gap-1 p-1 rounded-xl bg-[#fdf2f8] border border-[#e8d8de]">
+            <div className="flex items-center gap-1 p-1 rounded-xl bg-gray-100 border border-gray-200">
               {[
                 { id: 'ADMIN' as UserRole, label: 'Admin', icon: Shield },
                 { id: 'PROCUREMENT' as UserRole, label: 'Procurement', icon: Briefcase },
@@ -197,8 +197,8 @@ END OF REPORT
                     onClick={() => setSelectedViewRole(p.id)}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
                       active
-                        ? 'bg-[#8e3a59] text-white shadow-xs font-bold'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-white'
+                        ? 'bg-blue-600 text-white shadow-xs font-bold'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-white'
                     }`}
                   >
                     <Icon className="h-3.5 w-3.5" />
@@ -213,7 +213,7 @@ END OF REPORT
           <select
             value={dateRange}
             onChange={(e) => setDateRange(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-white border border-[#e8d8de] hover:border-[#8e3a59] text-xs font-semibold text-slate-700 focus:outline-none transition shadow-2xs"
+            className="px-3 py-2 rounded-xl bg-white border border-gray-200 hover:border-blue-500 text-xs font-semibold text-gray-700 focus:outline-none transition shadow-xs"
           >
             <option value="Q2-2026">Q2 2026 (Current)</option>
             <option value="Q1-2026">Q1 2026</option>
@@ -224,7 +224,7 @@ END OF REPORT
           <button
             onClick={handleExportReport}
             disabled={isExporting}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#8e3a59] hover:bg-[#752d48] text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50"
           >
             <Download className="h-4 w-4" />
             <span>{isExporting ? 'Generating...' : 'Export Audit Report'}</span>
@@ -260,12 +260,12 @@ END OF REPORT
                 <AreaChart data={multiScenarioData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                   <defs>
                     <linearGradient id="aiOptimizedGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={BERRY_PALETTE.emerald} stopOpacity={0.2} />
-                      <stop offset="95%" stopColor={BERRY_PALETTE.emerald} stopOpacity={0.0} />
+                      <stop offset="5%" stopColor={THEME_PALETTE.emerald} stopOpacity={0.2} />
+                      <stop offset="95%" stopColor={THEME_PALETTE.emerald} stopOpacity={0.0} />
                     </linearGradient>
                     <linearGradient id="baselineGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={BERRY_PALETTE.rose} stopOpacity={0.15} />
-                      <stop offset="95%" stopColor={BERRY_PALETTE.rose} stopOpacity={0.0} />
+                      <stop offset="5%" stopColor={THEME_PALETTE.rose} stopOpacity={0.15} />
+                      <stop offset="95%" stopColor={THEME_PALETTE.rose} stopOpacity={0.0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -274,7 +274,7 @@ END OF REPORT
                   <Tooltip
                     contentStyle={{
                       backgroundColor: '#ffffff',
-                      border: '1px solid #e8d8de',
+                      border: '1px solid #E5E7EB',
                       borderRadius: '12px',
                       fontSize: '11px',
                     }}
@@ -285,7 +285,7 @@ END OF REPORT
                     type="monotone"
                     dataKey="baseline"
                     name="Incumbent Baseline (High Delay)"
-                    stroke={BERRY_PALETTE.rose}
+                    stroke={THEME_PALETTE.rose}
                     strokeWidth={2}
                     fillOpacity={1}
                     fill="url(#baselineGradient)"
@@ -294,16 +294,16 @@ END OF REPORT
                     type="monotone"
                     dataKey="counterfactual"
                     name="Counterfactual Twin Sim"
-                    stroke={BERRY_PALETTE.p2}
+                    stroke={THEME_PALETTE.p2}
                     strokeWidth={2}
                     strokeDasharray="4 4"
-                    dot={{ r: 3, fill: BERRY_PALETTE.p2 }}
+                    dot={{ r: 3, fill: THEME_PALETTE.p2 }}
                   />
                   <Area
                     type="monotone"
                     dataKey="aiOptimized"
                     name="AI-Optimized Multi-Agent Policy"
-                    stroke={BERRY_PALETTE.emerald}
+                    stroke={THEME_PALETTE.emerald}
                     strokeWidth={2.5}
                     fillOpacity={1}
                     fill="url(#aiOptimizedGradient)"
@@ -313,14 +313,14 @@ END OF REPORT
             </div>
           </div>
 
-          <div className="mt-4 pt-3 border-t border-[#fdf2f8] flex flex-wrap items-center justify-between text-xs text-slate-500">
+          <div className="mt-4 pt-3 border-t border-gray-100 flex flex-wrap items-center justify-between text-xs text-gray-500">
             <span>Monte Carlo 1,000-trial calibration</span>
-            <span className="font-semibold text-[#8e3a59]">Continuous stochastic learning active</span>
+            <span className="font-semibold text-purple-600">Continuous stochastic learning active</span>
           </div>
         </div>
 
         {/* Cost Allocation Donut Card */}
-        <div className="lg:col-span-4 bg-white rounded-2xl p-5 border border-[#e8d8de] shadow-xs flex flex-col justify-between">
+        <div className="lg:col-span-4 bg-white rounded-2xl p-5 border border-gray-200 shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-bold text-slate-900 tracking-tight">
@@ -382,7 +382,7 @@ END OF REPORT
             </div>
           </div>
 
-          <div className="mt-3 pt-3 border-t border-[#fdf2f8] flex items-center justify-between text-[11px] text-slate-400">
+          <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-400">
             <span>Direct PO & Logistics Spend</span>
             <span className="text-emerald-700 font-bold">$6,000 Concession Savings</span>
           </div>
@@ -394,15 +394,15 @@ END OF REPORT
       {/* ============================================================ */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Maritime Port Chokepoint & Wait Times (Bar Plot) */}
-        <div className="lg:col-span-6 bg-white rounded-2xl p-5 border border-[#e8d8de] shadow-xs">
+        <div className="lg:col-span-6 bg-white rounded-2xl p-5 border border-gray-200 shadow-xs">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-bold text-slate-900 tracking-tight">
+              <h3 className="text-sm font-bold text-gray-900 tracking-tight">
                 Global Port Congestion & Anchorage Wait Times
               </h3>
-              <p className="text-xs text-slate-400">Real-time AIS Telemetry vs Baseline Dwell Hours</p>
+              <p className="text-xs text-gray-500">Real-time AIS Telemetry vs Baseline Dwell Hours</p>
             </div>
-            <span className="text-xs font-semibold text-[#8e3a59] bg-[#fdf2f8] px-2.5 py-1 rounded-full border border-[#e8d8de]">
+            <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200">
               5 Global Hubs
             </span>
           </div>
@@ -416,28 +416,28 @@ END OF REPORT
                 <Tooltip
                   contentStyle={{
                     backgroundColor: '#ffffff',
-                    border: '1px solid #e8d8de',
+                    border: '1px solid #E5E7EB',
                     borderRadius: '10px',
                     fontSize: '11px',
                   }}
                   formatter={(val: any, name: any) => [`${val} Hours`, name]}
                 />
                 <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
-                <Bar dataKey="waitHours" name="Observed Anchorage Wait (Hrs)" fill={BERRY_PALETTE.p1} radius={[6, 6, 0, 0]} />
-                <Bar dataKey="baseline" name="Expected Clearance Baseline (Hrs)" fill={BERRY_PALETTE.p3} radius={[6, 6, 0, 0]} />
+                <Bar dataKey="waitHours" name="Observed Anchorage Wait (Hrs)" fill={THEME_PALETTE.p1} radius={[6, 6, 0, 0]} />
+                <Bar dataKey="baseline" name="Expected Clearance Baseline (Hrs)" fill={THEME_PALETTE.p3} radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* Global Supplier Scorecards Plot */}
-        <div className="lg:col-span-6 bg-white rounded-2xl p-5 border border-[#e8d8de] shadow-xs">
+        <div className="lg:col-span-6 bg-white rounded-2xl p-5 border border-gray-200 shadow-xs">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-bold text-slate-900 tracking-tight">
+              <h3 className="text-sm font-bold text-gray-900 tracking-tight">
                 Supplier Composite Score vs Reliability
               </h3>
-              <p className="text-xs text-slate-400">Benchmarking evaluated suppliers in catalog</p>
+              <p className="text-xs text-gray-500">Benchmarking evaluated suppliers in catalog</p>
             </div>
             <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
               Evaluated Partners
@@ -453,15 +453,15 @@ END OF REPORT
                 <Tooltip
                   contentStyle={{
                     backgroundColor: '#ffffff',
-                    border: '1px solid #e8d8de',
+                    border: '1px solid #E5E7EB',
                     borderRadius: '10px',
                     fontSize: '11px',
                   }}
                 />
                 <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
-                <Bar dataKey="score" name="Composite Score (0-100)" fill={BERRY_PALETTE.p1} radius={[6, 6, 0, 0]} />
-                <Bar dataKey="reliability" name="Reliability (%)" fill={BERRY_PALETTE.emerald} radius={[6, 6, 0, 0]} />
-                <Bar dataKey="price" name="Avg Rate ($/unit)" fill={BERRY_PALETTE.p2} radius={[6, 6, 0, 0]} />
+                <Bar dataKey="score" name="Composite Score (0-100)" fill={THEME_PALETTE.p1} radius={[6, 6, 0, 0]} />
+                <Bar dataKey="reliability" name="Reliability (%)" fill={THEME_PALETTE.emerald} radius={[6, 6, 0, 0]} />
+                <Bar dataKey="price" name="Avg Rate ($/unit)" fill={THEME_PALETTE.p2} radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -471,13 +471,13 @@ END OF REPORT
       {/* ============================================================ */}
       {/* 4. ROLE-TAILORED ANALYTICAL PERSPECTIVE SUMMARY             */}
       {/* ============================================================ */}
-      <div className="rounded-2xl p-5 border border-[#e8d8de] bg-white shadow-xs">
+      <div className="rounded-2xl p-5 border border-gray-200 bg-white shadow-xs">
         <div className="flex items-center gap-2 mb-4">
-          <div className="p-2 rounded-xl bg-[#fdf2f8] text-[#8e3a59]">
+          <div className="p-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-200">
             <FileText className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-slate-900 tracking-tight">
+            <h3 className="text-sm font-bold text-gray-900 tracking-tight">
               {selectedViewRole === 'ADMIN'
                 ? 'Executive Administrator Operational Audit'
                 : selectedViewRole === 'PROCUREMENT'
@@ -486,7 +486,7 @@ END OF REPORT
                 ? 'Supplier Dispatch & RFQ Fulfillment Performance'
                 : 'Customer Delivery SLA & Order Transparency Audit'}
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-gray-500">
               Role-specific insights automatically generated from live system states
             </p>
           </div>
@@ -494,85 +494,85 @@ END OF REPORT
 
         {selectedViewRole === 'ADMIN' && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="p-4 rounded-xl bg-[#fdf2f8] border border-[#e8d8de]">
-              <span className="text-[11px] font-bold uppercase text-slate-500">System SLA Status</span>
-              <p className="text-xl font-bold text-emerald-700 mt-1">99.2% Nominal</p>
-              <p className="text-[11px] text-slate-600 mt-1">Zero downtime or contract breach penalties incurred.</p>
+            <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+              <span className="text-[11px] font-bold uppercase text-gray-500">System SLA Status</span>
+              <p className="text-xl font-bold text-emerald-600 mt-1">99.2% Nominal</p>
+              <p className="text-[11px] text-gray-600 mt-1">Zero downtime or contract breach penalties incurred.</p>
             </div>
-            <div className="p-4 rounded-xl bg-[#fdf2f8] border border-[#e8d8de]">
-              <span className="text-[11px] font-bold uppercase text-slate-500">Active Multi-Agents</span>
-              <p className="text-xl font-bold text-[#8e3a59] mt-1">9 Supervisor Agents</p>
-              <p className="text-[11px] text-slate-600 mt-1">Buyer, Supplier, Logistics, Risk & CNT operating.</p>
+            <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+              <span className="text-[11px] font-bold uppercase text-gray-500">Active Multi-Agents</span>
+              <p className="text-xl font-bold text-blue-600 mt-1">9 Supervisor Agents</p>
+              <p className="text-[11px] text-gray-600 mt-1">Buyer, Supplier, Logistics, Risk & CNT operating.</p>
             </div>
-            <div className="p-4 rounded-xl bg-[#fdf2f8] border border-[#e8d8de]">
-              <span className="text-[11px] font-bold uppercase text-slate-500">Disruption Mitigation</span>
-              <p className="text-xl font-bold text-slate-900 mt-1">1 Critical Resolved</p>
-              <p className="text-[11px] text-slate-600 mt-1">Switched to alternative vendor avoiding 6-day stockout.</p>
+            <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+              <span className="text-[11px] font-bold uppercase text-gray-500">Disruption Mitigation</span>
+              <p className="text-xl font-bold text-gray-900 mt-1">1 Critical Resolved</p>
+              <p className="text-[11px] text-gray-600 mt-1">Switched to alternative vendor avoiding 6-day stockout.</p>
             </div>
-            <div className="p-4 rounded-xl bg-[#fdf2f8] border border-[#e8d8de]">
-              <span className="text-[11px] font-bold uppercase text-slate-500">Procurement Budget</span>
-              <p className="text-xl font-bold text-slate-900 mt-1">$63,000 Allocated</p>
-              <p className="text-[11px] text-slate-600 mt-1">Achieved $6,000 below original customer budget ceiling.</p>
+            <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+              <span className="text-[11px] font-bold uppercase text-gray-500">Procurement Budget</span>
+              <p className="text-xl font-bold text-gray-900 mt-1">$63,000 Allocated</p>
+              <p className="text-[11px] text-gray-600 mt-1">Achieved $6,000 below original customer budget ceiling.</p>
             </div>
           </div>
         )}
 
         {selectedViewRole === 'PROCUREMENT' && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 rounded-xl bg-[#fdf2f8] border border-[#e8d8de]">
-              <span className="text-[11px] font-bold uppercase text-slate-500">Negotiation Concession</span>
-              <p className="text-xl font-bold text-emerald-700 mt-1">+{negMetrics?.average_concession_discount_pct ?? 7.8}%</p>
-              <p className="text-[11px] text-slate-600 mt-1">Autonomous bilateral concession extracted per contract.</p>
+            <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+              <span className="text-[11px] font-bold uppercase text-gray-500">Negotiation Concession</span>
+              <p className="text-xl font-bold text-emerald-600 mt-1">+{negMetrics?.average_concession_discount_pct ?? 7.8}%</p>
+              <p className="text-[11px] text-gray-600 mt-1">Autonomous bilateral concession extracted per contract.</p>
             </div>
-            <div className="p-4 rounded-xl bg-[#fdf2f8] border border-[#e8d8de]">
-              <span className="text-[11px] font-bold uppercase text-slate-500">Supplier Response Rate</span>
-              <p className="text-xl font-bold text-slate-900 mt-1">100% On-Target</p>
-              <p className="text-[11px] text-slate-600 mt-1">Quotations submitted within target 24h turnarounds.</p>
+            <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+              <span className="text-[11px] font-bold uppercase text-gray-500">Supplier Response Rate</span>
+              <p className="text-xl font-bold text-gray-900 mt-1">100% On-Target</p>
+              <p className="text-[11px] text-gray-600 mt-1">Quotations submitted within target 24h turnarounds.</p>
             </div>
-            <div className="p-4 rounded-xl bg-[#fdf2f8] border border-[#e8d8de]">
-              <span className="text-[11px] font-bold uppercase text-slate-500">CNT Policy Alignment</span>
-              <p className="text-xl font-bold text-[#8e3a59] mt-1">SWITCH Selected</p>
-              <p className="text-[11px] text-slate-600 mt-1">Optimized supplier chosen based on lead time & pricing.</p>
+            <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+              <span className="text-[11px] font-bold uppercase text-gray-500">CNT Policy Alignment</span>
+              <p className="text-xl font-bold text-purple-600 mt-1">SWITCH Selected</p>
+              <p className="text-[11px] text-gray-600 mt-1">Optimized supplier chosen based on lead time & pricing.</p>
             </div>
           </div>
         )}
 
         {selectedViewRole === 'SUPPLIER' && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 rounded-xl bg-[#fdf2f8] border border-[#e8d8de]">
-              <span className="text-[11px] font-bold uppercase text-slate-500">RFQ Conversion Rate</span>
-              <p className="text-xl font-bold text-[#8e3a59] mt-1">66.7% Win Rate</p>
-              <p className="text-[11px] text-slate-600 mt-1">Quotations successfully matched to Purchase Orders.</p>
+            <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+              <span className="text-[11px] font-bold uppercase text-gray-500">RFQ Conversion Rate</span>
+              <p className="text-xl font-bold text-blue-600 mt-1">66.7% Win Rate</p>
+              <p className="text-[11px] text-gray-600 mt-1">Quotations successfully matched to Purchase Orders.</p>
             </div>
-            <div className="p-4 rounded-xl bg-[#fdf2f8] border border-[#e8d8de]">
-              <span className="text-[11px] font-bold uppercase text-slate-500">Dispatch Adherence</span>
-              <p className="text-xl font-bold text-emerald-700 mt-1">100% On-Time</p>
-              <p className="text-[11px] text-slate-600 mt-1">Batches prepared and dispatched within promised lead days.</p>
+            <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+              <span className="text-[11px] font-bold uppercase text-gray-500">Dispatch Adherence</span>
+              <p className="text-xl font-bold text-emerald-600 mt-1">100% On-Time</p>
+              <p className="text-[11px] text-gray-600 mt-1">Batches prepared and dispatched within promised lead days.</p>
             </div>
-            <div className="p-4 rounded-xl bg-[#fdf2f8] border border-[#e8d8de]">
-              <span className="text-[11px] font-bold uppercase text-slate-500">Composite Score</span>
-              <p className="text-xl font-bold text-slate-900 mt-1">94.0 / 100</p>
-              <p className="text-[11px] text-slate-600 mt-1">Ranked #1 Preferred Component Partner.</p>
+            <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+              <span className="text-[11px] font-bold uppercase text-gray-500">Composite Score</span>
+              <p className="text-xl font-bold text-gray-900 mt-1">94.0 / 100</p>
+              <p className="text-[11px] text-gray-600 mt-1">Ranked #1 Preferred Component Partner.</p>
             </div>
           </div>
         )}
 
         {selectedViewRole === 'CUSTOMER' && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 rounded-xl bg-[#fdf2f8] border border-[#e8d8de]">
-              <span className="text-[11px] font-bold uppercase text-slate-500">Delivery SLA Compliance</span>
-              <p className="text-xl font-bold text-emerald-700 mt-1">100% Guaranteed</p>
-              <p className="text-[11px] text-slate-600 mt-1">All orders tracked with zero penalty breaches.</p>
+            <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+              <span className="text-[11px] font-bold uppercase text-gray-500">Delivery SLA Compliance</span>
+              <p className="text-xl font-bold text-emerald-600 mt-1">100% Guaranteed</p>
+              <p className="text-[11px] text-gray-600 mt-1">All orders tracked with zero penalty breaches.</p>
             </div>
-            <div className="p-4 rounded-xl bg-[#fdf2f8] border border-[#e8d8de]">
-              <span className="text-[11px] font-bold uppercase text-slate-500">Milestone Transparency</span>
-              <p className="text-xl font-bold text-[#8e3a59] mt-1">Real-Time GPS Tracking</p>
-              <p className="text-[11px] text-slate-600 mt-1">Live timeline from procurement to final dispatch.</p>
+            <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+              <span className="text-[11px] font-bold uppercase text-gray-500">Milestone Transparency</span>
+              <p className="text-xl font-bold text-blue-600 mt-1">Real-Time GPS Tracking</p>
+              <p className="text-[11px] text-gray-600 mt-1">Live timeline from procurement to final dispatch.</p>
             </div>
-            <div className="p-4 rounded-xl bg-[#fdf2f8] border border-[#e8d8de]">
-              <span className="text-[11px] font-bold uppercase text-slate-500">Carbon & Efficiency</span>
-              <p className="text-xl font-bold text-emerald-700 mt-1">A+ Certified</p>
-              <p className="text-[11px] text-slate-600 mt-1">Optimized multimodal shipping route chosen.</p>
+            <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+              <span className="text-[11px] font-bold uppercase text-gray-500">Carbon & Efficiency</span>
+              <p className="text-xl font-bold text-emerald-600 mt-1">A+ Certified</p>
+              <p className="text-[11px] text-gray-600 mt-1">Optimized multimodal shipping route chosen.</p>
             </div>
           </div>
         )}

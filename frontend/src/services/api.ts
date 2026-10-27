@@ -178,7 +178,7 @@ export const api = {
     return res.json();
   },
 
-  async counteroffer(sessionId: number, offeredPrice: number, offeredLeadDays: number, message: string): Promise<NegotiationSession> {
+  async counteroffer(sessionId: number, offeredPrice: number, offeredLeadDays: number, message?: string): Promise<NegotiationSession> {
     const res = await fetch(`${API_BASE}/negotiations/counter`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

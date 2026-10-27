@@ -66,33 +66,33 @@ export const NotificationsPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-white tracking-tight">Notifications & Workflow Alerts</h2>
-          <p className="text-xs text-slate-400">
+          <h2 className="text-xl font-bold text-gray-900 tracking-tight">Notifications & Workflow Alerts</h2>
+          <p className="text-xs text-gray-500">
             Database-backed role notifications dispatched by the Notification Agent.
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
+          <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
             <input
               type="checkbox"
               checked={unreadOnly}
               onChange={(e) => setUnreadOnly(e.target.checked)}
-              className="rounded bg-slate-900 border-slate-700 text-blue-600 focus:ring-0"
+              className="rounded bg-white border-gray-300 text-blue-600 focus:ring-blue-500"
             />
             Unread Only
           </label>
           <button
             onClick={handleMarkAllRead}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 text-xs font-semibold transition"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 text-xs font-semibold shadow-xs transition"
           >
-            <CheckCheck className="h-3.5 w-3.5" /> Mark All as Read
+            <CheckCheck className="h-3.5 w-3.5 text-blue-600" /> Mark All as Read
           </button>
         </div>
       </div>
 
-      <div className="glass-card rounded-2xl border border-slate-800 divide-y divide-slate-800/60 overflow-hidden">
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-xs divide-y divide-gray-100 overflow-hidden">
         {notifications.length === 0 ? (
-          <div className="p-12 text-center text-slate-400 text-xs">
+          <div className="p-12 text-center text-gray-400 text-xs">
             No notifications available for current filters.
           </div>
         ) : (
@@ -100,25 +100,25 @@ export const NotificationsPage: React.FC = () => {
             <div
               key={n.id}
               className={`p-4 transition flex items-start justify-between gap-4 ${
-                n.is_read ? 'bg-slate-950/40 opacity-75' : 'bg-slate-900/50'
+                n.is_read ? 'bg-gray-50/50 opacity-80' : 'bg-white hover:bg-blue-50/30'
               }`}
             >
               <div className="flex items-start gap-3">
-                <div className="p-2 rounded-xl bg-slate-850 border border-slate-700/80 mt-0.5">
+                <div className="p-2 rounded-xl bg-gray-100 border border-gray-200 mt-0.5">
                   {getEventIcon(n.event_type)}
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <h4 className="text-xs font-bold text-white">{n.title}</h4>
-                    <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">
+                    <h4 className="text-xs font-bold text-gray-900">{n.title}</h4>
+                    <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 border border-gray-200">
                       {n.role}
                     </span>
                     {!n.is_read && (
-                      <span className="h-2 w-2 rounded-full bg-blue-500"></span>
+                      <span className="h-2 w-2 rounded-full bg-blue-600"></span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-300 leading-relaxed">{n.message}</p>
-                  <span className="text-[10px] text-slate-500 mt-1 block">
+                  <p className="text-xs text-gray-600 leading-relaxed">{n.message}</p>
+                  <span className="text-[10px] text-gray-400 mt-1 block">
                     {new Date(n.created_at).toLocaleString()}
                   </span>
                 </div>
@@ -127,7 +127,7 @@ export const NotificationsPage: React.FC = () => {
               {!n.is_read && (
                 <button
                   onClick={() => handleMarkRead(n.id)}
-                  className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition text-xs"
+                  className="p-1.5 rounded-lg bg-gray-100 hover:bg-blue-50 text-gray-600 hover:text-blue-600 transition text-xs border border-gray-200"
                   title="Mark as Read"
                 >
                   <Check className="h-3.5 w-3.5" />

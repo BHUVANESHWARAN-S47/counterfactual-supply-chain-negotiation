@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AgentTask, AgentLog } from '../types';
 import { StatusBadge } from '../components/StatusBadge';
 import { api } from '../services/api';
-import { Activity, Shield, Cpu, RefreshCw, Eye, CheckCircle2, AlertCircle, X, Terminal } from 'lucide-react';
+import { Activity, Shield, Cpu, RefreshCw, Eye, CheckCircle2, AlertCircle, X, Terminal, Sparkles } from 'lucide-react';
 
 export const AgentMonitorPage: React.FC = () => {
   const [agentsStatus, setAgentsStatus] = useState<any | null>(null);
@@ -35,20 +35,21 @@ export const AgentMonitorPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-12">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-[#E5E7EB] shadow-xs">
         <div>
-          <h2 className="text-xl font-bold text-white tracking-tight">Multi-Agent System Orchestrator & Live Monitor</h2>
-          <p className="text-xs text-slate-400">
+          <h2 className="text-xl font-bold text-[#111827] tracking-tight">Multi-Agent System Orchestrator & Live Monitor</h2>
+          <p className="text-xs text-[#6B7280] mt-0.5">
             Real-time telemetry and task dependencies across 9 specialized autonomous supply chain agents.
           </p>
         </div>
         <button
           onClick={fetchAgentData}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 text-xs font-semibold transition"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-[#F9FAFB] text-[#2563EB] border border-[#E5E7EB] text-xs font-semibold transition cursor-pointer shadow-2xs self-start sm:self-auto"
         >
-          <RefreshCw className="h-3.5 w-3.5" /> Refresh Telemetry
+          <RefreshCw className="h-3.5 w-3.5" />
+          <span>Refresh Telemetry</span>
         </button>
       </div>
 
@@ -57,24 +58,26 @@ export const AgentMonitorPage: React.FC = () => {
         {agentsStatus?.agents?.map((ag: any, idx: number) => (
           <div
             key={idx}
-            className="glass-card rounded-2xl p-4 border border-slate-800 hover:border-slate-700 transition"
+            className="rounded-2xl p-4 border border-[#E5E7EB] bg-white hover:border-[#2563EB]/50 transition shadow-xs hover:shadow-md flex flex-col justify-between"
           >
-            <div className="flex items-start justify-between mb-2">
-              <div>
-                <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
-                  {ag.name}
-                </h4>
-                <span className="text-[10px] text-blue-400 font-semibold">{ag.category}</span>
+            <div>
+              <div className="flex items-start justify-between mb-2">
+                <div>
+                  <h4 className="text-xs font-bold text-[#111827] flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-[#10B981]"></span>
+                    {ag.name}
+                  </h4>
+                  <span className="text-[10px] text-[#2563EB] font-semibold">{ag.category}</span>
+                </div>
+                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-[#ECFDF5] text-[#065F46] border border-[#A7F3D0]">
+                  {ag.status}
+                </span>
               </div>
-              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                {ag.status}
-              </span>
+              <p className="text-[11px] text-[#6B7280] mb-3 leading-snug">{ag.role}</p>
             </div>
-            <p className="text-[11px] text-slate-400 mb-3">{ag.role}</p>
-            <div className="flex items-center justify-between text-[11px] pt-2 border-t border-slate-800/80 text-slate-500">
-              <span>Tasks Executed: <strong className="text-slate-200">{ag.total_tasks_run}</strong></span>
-              <span>Health: <strong className="text-emerald-400">{ag.health}</strong></span>
+            <div className="flex items-center justify-between text-[11px] pt-2 border-t border-[#F3F4F6] text-[#9CA3AF]">
+              <span>Tasks Run: <strong className="text-[#111827]">{ag.total_tasks_run}</strong></span>
+              <span>Health: <strong className="text-[#10B981]">{ag.health}</strong></span>
             </div>
           </div>
         ))}
@@ -83,40 +86,40 @@ export const AgentMonitorPage: React.FC = () => {
       {/* Agent Tasks and Live Logs Tabs/Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Agent Tasks */}
-        <div className="glass-card rounded-2xl border border-slate-800 overflow-hidden flex flex-col h-[500px]">
-          <div className="p-4 border-b border-slate-800 bg-slate-900/60 flex items-center justify-between">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-              <Activity className="h-4 w-4 text-blue-400" />
+        <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-xs overflow-hidden flex flex-col h-[500px]">
+          <div className="p-4 border-b border-[#E5E7EB] bg-[#F5F7FB] flex items-center justify-between">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[#374151] flex items-center gap-2">
+              <Activity className="h-4 w-4 text-[#2563EB]" />
               Agent Task Execution Stream
             </h3>
-            <span className="text-xs text-slate-500">{tasks.length} Logged Tasks</span>
+            <span className="text-xs text-[#6B7280]">{tasks.length} Logged Tasks</span>
           </div>
 
-          <div className="flex-1 overflow-y-auto divide-y divide-slate-800/60">
+          <div className="flex-1 overflow-y-auto divide-y divide-[#F3F4F6]">
             {tasks.map((t) => (
-              <div key={t.id} className="p-3.5 hover:bg-slate-900/40 transition flex items-center justify-between text-xs">
+              <div key={t.id} className="p-3.5 hover:bg-[#F9FAFB] transition flex items-center justify-between text-xs">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-bold text-white">{t.agent_name}</span>
+                    <span className="font-bold text-[#111827]">{t.agent_name}</span>
                     <StatusBadge status={t.status} />
                   </div>
-                  <div className="text-[11px] text-slate-400 flex items-center gap-2">
+                  <div className="text-[11px] text-[#6B7280] flex items-center gap-2">
                     <span>{t.task_number}</span>
                     {t.related_order_id && <span>• Order #{t.related_order_id}</span>}
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="text-right text-[10px] text-slate-500">
+                  <div className="text-right text-[10px] text-[#9CA3AF]">
                     <div>{new Date(t.created_at).toLocaleTimeString()}</div>
                     {t.requires_approval && (
-                      <span className="text-amber-400 font-bold uppercase">Approval Gate</span>
+                      <span className="text-[#F59E0B] font-bold uppercase">Approval Gate</span>
                     )}
                   </div>
                   {t.output_payload && (
                     <button
                       onClick={() => setSelectedTaskPayload(t)}
-                      className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-blue-400 border border-slate-700 transition"
+                      className="p-1.5 rounded-lg bg-[#EFF6FF] hover:bg-[#DBEAFE] text-[#2563EB] border border-[#DBEAFE] transition cursor-pointer"
                       title="Inspect Structured Payload"
                     >
                       <Eye className="h-3.5 w-3.5" />
@@ -129,40 +132,40 @@ export const AgentMonitorPage: React.FC = () => {
         </div>
 
         {/* Live Execution Logs */}
-        <div className="glass-card rounded-2xl border border-slate-800 overflow-hidden flex flex-col h-[500px]">
-          <div className="p-4 border-b border-slate-800 bg-slate-900/60 flex items-center justify-between">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-              <Terminal className="h-4 w-4 text-emerald-400" />
+        <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-xs overflow-hidden flex flex-col h-[500px]">
+          <div className="p-4 border-b border-[#E5E7EB] bg-[#F5F7FB] flex items-center justify-between">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[#374151] flex items-center gap-2">
+              <Terminal className="h-4 w-4 text-[#10B981]" />
               Live Execution Event Logs
             </h3>
-            <span className="text-xs text-slate-500">{logs.length} Events</span>
+            <span className="text-xs text-[#6B7280]">{logs.length} Events</span>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-2.5 font-mono text-xs">
+          <div className="flex-1 overflow-y-auto p-4 space-y-2.5 font-mono text-xs bg-[#F5F7FB]/40">
             {logs.map((l) => (
               <div
                 key={l.id}
-                className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800/80 text-[11px] flex items-start gap-2"
+                className="p-2.5 rounded-xl bg-white border border-[#E5E7EB] text-[11px] flex items-start gap-2 shadow-2xs"
               >
                 <span
                   className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
                     l.log_level === 'SUCCESS'
-                      ? 'bg-emerald-500/20 text-emerald-400'
+                      ? 'bg-[#ECFDF5] text-[#10B981]'
                       : l.log_level === 'WARNING'
-                      ? 'bg-amber-500/20 text-amber-400'
+                      ? 'bg-[#FFF7ED] text-[#F59E0B]'
                       : l.log_level === 'ERROR'
-                      ? 'bg-rose-500/20 text-rose-400'
-                      : 'bg-blue-500/20 text-blue-400'
+                      ? 'bg-[#FEF2F2] text-[#EF4444]'
+                      : 'bg-[#EFF6FF] text-[#2563EB]'
                   }`}
                 >
                   {l.log_level}
                 </span>
                 <div className="flex-1">
-                  <div className="flex items-center justify-between text-slate-500 text-[10px]">
-                    <span className="text-slate-300 font-bold">{l.agent_name}</span>
+                  <div className="flex items-center justify-between text-[#6B7280] text-[10px]">
+                    <span className="text-[#111827] font-bold">{l.agent_name}</span>
                     <span>{new Date(l.timestamp).toLocaleTimeString()}</span>
                   </div>
-                  <p className="text-slate-300 mt-0.5 leading-relaxed">{l.message}</p>
+                  <p className="text-[#374151] mt-0.5 leading-relaxed">{l.message}</p>
                 </div>
               </div>
             ))}
@@ -172,31 +175,34 @@ export const AgentMonitorPage: React.FC = () => {
 
       {/* Task Payload Inspector Modal */}
       {selectedTaskPayload && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-6">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in">
+          <div className="relative w-full max-w-xl bg-white border border-[#E5E7EB] rounded-2xl shadow-2xl p-6">
+            <div className="flex items-center justify-between pb-3 border-b border-[#F3F4F6] mb-4">
               <div>
-                <h3 className="text-sm font-bold text-white">
+                <h3 className="text-sm font-bold text-[#111827]">
                   Payload Inspector: {selectedTaskPayload.task_number}
                 </h3>
-                <p className="text-xs text-slate-400">{selectedTaskPayload.agent_name}</p>
+                <p className="text-xs text-[#6B7280]">{selectedTaskPayload.agent_name}</p>
               </div>
-              <button onClick={() => setSelectedTaskPayload(null)} className="text-slate-400 hover:text-white">
+              <button
+                onClick={() => setSelectedTaskPayload(null)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-[#F3F4F6] cursor-pointer"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto text-xs">
               <div>
-                <span className="text-xs font-semibold text-slate-400 block mb-1">Input Payload:</span>
-                <pre className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300 overflow-x-auto">
+                <span className="text-xs font-semibold text-[#4B5563] block mb-1">Input Payload:</span>
+                <pre className="p-3 rounded-xl bg-[#F5F7FB] border border-[#E5E7EB] text-[11px] text-[#374151] overflow-x-auto font-mono">
                   {JSON.stringify(selectedTaskPayload.input_payload, null, 2)}
                 </pre>
               </div>
 
               <div>
-                <span className="text-xs font-semibold text-slate-400 block mb-1">Output Payload:</span>
-                <pre className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-emerald-300 overflow-x-auto">
+                <span className="text-xs font-semibold text-[#4B5563] block mb-1">Output Payload:</span>
+                <pre className="p-3 rounded-xl bg-[#ECFDF5] border border-[#A7F3D0] text-[11px] text-[#065F46] overflow-x-auto font-mono">
                   {JSON.stringify(selectedTaskPayload.output_payload, null, 2)}
                 </pre>
               </div>

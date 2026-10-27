@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard,
@@ -11,8 +11,11 @@ import {
   Bell,
   Truck,
   UserCheck,
-  Star,
-  Activity,
+  Sun,
+  Moon,
+  Globe,
+  ChevronDown,
+  Sparkles,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -22,31 +25,32 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
   const { role } = useAuth();
+  const [themeMode, setThemeMode] = useState<'light' | 'dark'>('light');
 
   // Exactly 7 core modules for Admin and Procurement Manager
   const enterpriseModules = [
-    { id: 'overview', label: '1. Overview Dashboard', icon: LayoutDashboard },
-    { id: 'orders', label: '2. Customer Demand & Orders', icon: ShoppingCart },
-    { id: 'inventory', label: '3. Inventory & Shortage Analysis', icon: Package },
-    { id: 'procurement', label: '4. Procurement & Quotations', icon: Layers },
-    { id: 'cnt', label: '5. Counterfactual Twin (CNT)', icon: Cpu },
-    { id: 'suppliers', label: '6. Supplier & Negotiation Hub', icon: Users },
-    { id: 'reports', label: '7. Reports & Intelligence', icon: BarChart3 },
+    { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'orders', label: 'Customer Demand', icon: ShoppingCart },
+    { id: 'inventory', label: 'Inventory & Stock', icon: Package },
+    { id: 'procurement', label: 'Procurement & RFQs', icon: Layers },
+    { id: 'cnt', label: 'Counterfactual Twin', icon: Cpu, isAi: true },
+    { id: 'suppliers', label: 'Suppliers & Negotiation', icon: Users },
+    { id: 'reports', label: 'Reports & Analytics', icon: BarChart3 },
   ];
 
   // Role dedicated portals
   const supplierModules = [
-    { id: 'supplier-portal', label: 'Supplier Workspace & RFQs', icon: Truck },
+    { id: 'supplier-portal', label: 'Supplier Workspace', icon: Truck },
     { id: 'suppliers', label: 'Active Negotiations', icon: Users },
-    { id: 'reports', label: 'Supplier Fulfillment Analytics', icon: BarChart3 },
-    { id: 'notifications', label: 'Alerts & Notifications', icon: Bell },
+    { id: 'reports', label: 'Fulfillment Analytics', icon: BarChart3 },
+    { id: 'notifications', label: 'Alerts & Messages', icon: Bell },
   ];
 
   const customerModules = [
     { id: 'customer-portal', label: 'Customer Workspace', icon: UserCheck },
-    { id: 'orders', label: 'Order Tracking & Delivery', icon: ShoppingCart },
-    { id: 'reports', label: 'Delivery SLA Analytics', icon: BarChart3 },
-    { id: 'notifications', label: 'Order Notifications', icon: Bell },
+    { id: 'orders', label: 'Order Tracking & SLA', icon: ShoppingCart },
+    { id: 'reports', label: 'Delivery Analytics', icon: BarChart3 },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
   ];
 
   let activeNavItems = enterpriseModules;
@@ -54,17 +58,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
   if (role === 'CUSTOMER') activeNavItems = customerModules;
 
   return (
-    <aside className="w-64 flex-shrink-0 border-r border-[#d2b0bd] bg-white p-4 flex flex-col justify-between min-h-[calc(100vh-4rem)] shadow-xs">
+    <aside className="w-64 flex-shrink-0 border-r border-[#E5E7EB] bg-white p-4 flex flex-col justify-between min-h-[calc(100vh-4rem)]">
       <div className="space-y-6">
+        {/* Navigation Section */}
         <div>
-          <div className="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+          <div className="px-3 mb-2 text-[11px] font-bold uppercase tracking-wider text-[#9CA3AF]">
             {role === 'ADMIN'
-              ? 'Admin Platform Modules (7)'
+              ? 'Admin Modules (7)'
               : role === 'PROCUREMENT'
               ? 'Procurement Modules (7)'
               : role === 'SUPPLIER'
-              ? 'Supplier Workspace'
-              : 'Customer Workspace'}
+              ? 'Supplier Portal'
+              : 'Customer Portal'}
           </div>
           <nav className="space-y-1">
             {activeNavItems.map((item) => {
@@ -74,14 +79,31 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                     active
-                      ? 'bg-[#8e3a59] text-white shadow-xs font-bold'
-                      : 'text-slate-700 hover:text-slate-900 hover:bg-[#fdf2f8] border border-transparent'
+                      ? item.isAi
+                        ? 'bg-[#F3E8FF] text-[#7C3AED] shadow-2xs font-bold border border-[#E9D5FF]'
+                        : 'bg-[#EFF6FF] text-[#2563EB] shadow-2xs font-bold border border-[#DBEAFE]'
+                      : 'text-[#6B7280] hover:text-[#111827] hover:bg-[#F9FAFB] border border-transparent'
                   }`}
                 >
-                  <Icon className={`h-4 w-4 ${active ? 'text-white' : 'text-[#8e3a59]'}`} />
-                  <span className="truncate">{item.label}</span>
+                  <div className="flex items-center gap-3 truncate">
+                    <Icon
+                      className={`h-4 w-4 flex-shrink-0 ${
+                        active
+                          ? item.isAi
+                            ? 'text-[#7C3AED]'
+                            : 'text-[#2563EB]'
+                          : 'text-[#9CA3AF]'
+                      }`}
+                    />
+                    <span className="truncate">{item.label}</span>
+                  </div>
+                  {item.isAi && (
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#F3E8FF] text-[#7C3AED]">
+                      AI
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -89,17 +111,42 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
         </div>
       </div>
 
-      {/* System Status Footer */}
-      <div className="rounded-xl p-3 border border-[#d2b0bd] bg-[#fdf2f8] text-xs text-slate-700 space-y-1.5 shadow-2xs">
-        <div className="flex items-center justify-between font-bold text-slate-900">
-          <span>Supervisor Runtime</span>
-          <span className="text-emerald-700 flex items-center gap-1 font-bold">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Active
-          </span>
+      {/* Bottom Controls matching Screenshot */}
+      <div className="space-y-3 pt-4 border-t border-[#F3F4F6]">
+        {/* Dark / Light Toggle Pill */}
+        <div className="flex items-center justify-between p-1 rounded-xl bg-[#F3F4F6] border border-[#E5E7EB]">
+          <button
+            onClick={() => setThemeMode('light')}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition ${
+              themeMode === 'light'
+                ? 'bg-white text-[#111827] shadow-2xs font-bold'
+                : 'text-[#6B7280] hover:text-[#111827]'
+            }`}
+          >
+            <Sun className="h-3.5 w-3.5 text-[#F59E0B]" />
+            <span>Light</span>
+          </button>
+          <button
+            onClick={() => setThemeMode('dark')}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition ${
+              themeMode === 'dark'
+                ? 'bg-white text-[#111827] shadow-2xs font-bold'
+                : 'text-[#6B7280] hover:text-[#111827]'
+            }`}
+          >
+            <Moon className="h-3.5 w-3.5 text-[#6B7280]" />
+            <span>Dark</span>
+          </button>
         </div>
-        <p className="text-[11px] text-slate-600 leading-snug">
-          Autonomous multi-agent negotiation with Counterfactual Twin validation.
-        </p>
+
+        {/* Global View Selector Pill */}
+        <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-white border border-[#E5E7EB] hover:border-[#D1D5DB] transition cursor-pointer text-xs text-[#374151]">
+          <div className="flex items-center gap-2">
+            <Globe className="h-3.5 w-3.5 text-[#2563EB]" />
+            <span className="font-semibold text-[11px]">Global Network</span>
+          </div>
+          <ChevronDown className="h-3 w-3 text-[#9CA3AF]" />
+        </div>
       </div>
     </aside>
   );

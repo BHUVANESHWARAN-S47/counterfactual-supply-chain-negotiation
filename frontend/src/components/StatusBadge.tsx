@@ -7,25 +7,29 @@ interface StatusBadgeProps {
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
   const getBadgeStyle = (st: string) => {
     switch (st.toUpperCase()) {
-      // Semantic Green: Pass / Completed / Success
+      // Success Green
       case 'COMPLETED':
       case 'DELIVERED':
       case 'APPROVED':
       case 'HEALTHY':
       case 'AGREED':
       case 'BINDING':
-        return 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold';
+      case 'ON_TIME':
+      case 'ON-TIME':
+        return 'bg-[#ECFDF5] text-[#10B981] border-[#A7F3D0] font-bold';
 
-      // Semantic Red: Alert / Critical / Shortage / Failed
+      // Error / Critical Red
       case 'CRITICAL_SHORTAGE':
       case 'FAILED':
       case 'HIGH':
       case 'CRITICAL':
       case 'CANCELLED':
       case 'SLA_BREACH':
-        return 'bg-rose-50 text-rose-800 border-rose-300 font-bold';
+      case 'DELAYED':
+      case 'REJECTED':
+        return 'bg-[#FEF2F2] text-[#EF4444] border-[#FECACA] font-bold';
 
-      // Semantic Amber: Warning / Under Evaluation / Action Required
+      // Warning Orange
       case 'NEGOTIATE':
       case 'AWAITING_APPROVAL':
       case 'REQUIRES_APPROVAL':
@@ -33,17 +37,28 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
       case 'MEDIUM':
       case 'COUNTERED':
       case 'WARNING':
-        return 'bg-amber-50 text-amber-800 border-amber-300 font-bold';
+      case 'AT_RISK':
+        return 'bg-[#FFF7ED] text-[#F59E0B] border-[#FED7AA] font-bold';
 
-      // Brand Berry Wine: Neutral active, strategic decisions
-      case 'RETAIN':
+      // Purple AI / Counterfactual Decisions
       case 'SWITCH':
+      case 'CNT_OPTIMIZED':
+      case 'AI_RECOMMENDED':
+      case 'SIMULATED':
+        return 'bg-[#F3E8FF] text-[#7C3AED] border-[#E9D5FF] font-bold';
+
+      // Primary Blue: Active Operations
+      case 'RETAIN':
       case 'SHIPPED':
       case 'IN_TRANSIT':
       case 'RUNNING':
       case 'ACTIVE':
+      case 'SUBMITTED':
+      case 'PENDING':
+        return 'bg-[#EFF6FF] text-[#2563EB] border-[#DBEAFE] font-semibold';
+
       default:
-        return 'bg-[#fdf2f8] text-[#8e3a59] border-[#d2b0bd] font-semibold';
+        return 'bg-[#F3F4F6] text-[#6B7280] border-[#E5E7EB] font-medium';
     }
   };
 
@@ -53,7 +68,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
 
   return (
     <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border shadow-2xs ${getBadgeStyle(
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border ${getBadgeStyle(
         status
       )}`}
     >

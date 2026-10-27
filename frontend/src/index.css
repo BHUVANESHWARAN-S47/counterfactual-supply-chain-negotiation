@@ -2,208 +2,141 @@
 
 :root {
   color-scheme: light;
-  --p1: #8e3a59;
-  --p1-hover: #752d48;
-  --p2: #a5617a;
-  --p3: #bb899b;
-  --p4: #d2b0bd;
-  --p5: #e8d8de;
-  --p-light: #fdf2f8;
+  --primary-blue: #2563EB;
+  --primary-blue-hover: #1D4ED8;
+  --secondary-purple: #7C3AED;
+  --light-purple-bg: #F3E8FF;
+  --success-green: #10B981;
+  --warning-orange: #F59E0B;
+  --error-red: #EF4444;
+  --bg-page: #F5F7FB;
+  --bg-card: #FFFFFF;
+  --text-primary: #111827;
+  --text-secondary: #6B7280;
+  --text-muted: #9CA3AF;
+  --border-subtle: #E5E7EB;
+  --bg-subtle-blue: #EFF6FF;
+  --bg-subtle-green: #ECFDF5;
+  --bg-subtle-orange: #FFF7ED;
+  --bg-subtle-red: #FEF2F2;
+
+  /* Backward compatibility aliases */
+  --p1: #2563EB;
+  --p1-hover: #1D4ED8;
+  --p2: #7C3AED;
+  --p3: #9CA3AF;
+  --p4: #E5E7EB;
+  --p5: #F5F7FB;
+  --p-light: #EFF6FF;
 }
 
 body {
-  background-color: #fdf2f8;
-  color: #1e1b1d;
+  background-color: #F5F7FB;
+  color: #111827;
   min-height: 100vh;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Palette utility classes */
-.bg-p1 { background-color: #8e3a59 !important; }
-.bg-p1-hover:hover { background-color: #752d48 !important; }
-.bg-p2 { background-color: #a5617a !important; }
-.bg-p3 { background-color: #bb899b !important; }
-.bg-p4 { background-color: #d2b0bd !important; }
-.bg-p5 { background-color: #e8d8de !important; }
-.bg-p-light { background-color: #fdf2f8 !important; }
+.bg-primary { background-color: #2563EB !important; }
+.bg-primary-hover:hover { background-color: #1D4ED8 !important; }
+.bg-purple-accent { background-color: #7C3AED !important; }
+.bg-purple-soft { background-color: #F3E8FF !important; }
+.bg-page { background-color: #F5F7FB !important; }
+.bg-card { background-color: #FFFFFF !important; }
+.bg-subtle-blue { background-color: #EFF6FF !important; }
 
-.text-p1 { color: #8e3a59 !important; }
-.text-p2 { color: #a5617a !important; }
-.text-p3 { color: #bb899b !important; }
-.border-p1 { border-color: #8e3a59 !important; }
-.border-p4 { border-color: #d2b0bd !important; }
-.border-p5 { border-color: #e8d8de !important; }
+.text-primary { color: #111827 !important; }
+.text-secondary { color: #6B7280 !important; }
+.text-muted { color: #9CA3AF !important; }
+.text-brand-blue { color: #2563EB !important; }
+.text-brand-purple { color: #7C3AED !important; }
 
-/* Clean cards and panels */
-.glass-panel {
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid #d2b0bd;
-  box-shadow: 0 4px 12px -2px rgba(142, 58, 89, 0.06);
+.border-subtle { border-color: #E5E7EB !important; }
+.border-brand-blue { border-color: #2563EB !important; }
+
+/* Backward compatibility utility classes */
+.bg-p1 { background-color: #2563EB !important; }
+.bg-p1-hover:hover { background-color: #1D4ED8 !important; }
+.bg-p2 { background-color: #7C3AED !important; }
+.bg-p3 { background-color: #9CA3AF !important; }
+.bg-p4 { background-color: #E5E7EB !important; }
+.bg-p5 { background-color: #F5F7FB !important; }
+.bg-p-light { background-color: #EFF6FF !important; }
+
+.text-p1 { color: #2563EB !important; }
+.text-p2 { color: #7C3AED !important; }
+.text-p3 { color: #9CA3AF !important; }
+.border-p1 { border-color: #2563EB !important; }
+.border-p4 { border-color: #E5E7EB !important; }
+.border-p5 { border-color: #F5F7FB !important; }
+
+/* Clean enterprise cards matching Nexora/Zaiko screenshot */
+.enterprise-card {
+  background-color: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 1rem; /* 16px */
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.glass-card {
-  background: #ffffff;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid #d2b0bd;
-  box-shadow: 0 2px 6px -1px rgba(142, 58, 89, 0.05);
+.enterprise-card:hover {
+  border-color: #D1D5DB;
+  box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.05);
 }
 
-.glow-berry {
-  box-shadow: 0 0 25px -4px rgba(142, 58, 89, 0.25);
+.glass-panel, .glass-card {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
 }
 
-/* Comprehensive Theme Normalization */
-.light-theme {
-  background-color: #fdf2f8;
-  color: #1e1b1d;
+/* Comprehensive Slate/Dark Overrides to Light Enterprise SaaS */
+.bg-slate-950,
+.bg-slate-900 {
+  background-color: #FFFFFF !important;
 }
 
-.light-theme .bg-slate-950 {
-  background-color: #fdf2f8 !important;
+.bg-slate-850,
+.bg-slate-800 {
+  background-color: #F5F7FB !important;
 }
 
-.light-theme .bg-slate-900 {
-  background-color: #ffffff !important;
+.bg-slate-800\/50,
+.bg-slate-900\/50,
+.bg-slate-900\/60,
+.bg-slate-900\/80,
+.bg-slate-950\/60,
+.bg-slate-950\/80 {
+  background-color: #FFFFFF !important;
 }
 
-.light-theme .bg-slate-850 {
-  background-color: #fdf2f8 !important;
+.border-slate-800,
+.border-slate-700,
+.border-slate-600 {
+  border-color: #E5E7EB !important;
 }
 
-.light-theme .bg-slate-800 {
-  background-color: #f7eef3 !important;
+.border-slate-800\/50,
+.border-slate-700\/60,
+.border-slate-700\/80 {
+  border-color: #F3F4F6 !important;
 }
 
-.light-theme .bg-slate-800\/50,
-.light-theme .bg-slate-900\/50,
-.light-theme .bg-slate-900\/60,
-.light-theme .bg-slate-900\/80,
-.light-theme .bg-slate-950\/60,
-.light-theme .bg-slate-950\/80 {
-  background-color: rgba(255, 255, 255, 0.96) !important;
-}
-
-.light-theme .border-slate-800,
-.light-theme .border-slate-700 {
-  border-color: #d2b0bd !important;
-}
-
-.light-theme .border-slate-800\/50,
-.light-theme .border-slate-700\/60,
-.light-theme .border-slate-700\/80 {
-  border-color: #e8d8de !important;
-}
-
-.light-theme .text-white {
-  color: #1e1b1d !important;
-}
-
-.light-theme .text-slate-100 {
-  color: #1e1b1d !important;
-}
-
-.light-theme .text-slate-200 {
-  color: #382c32 !important;
-}
-
-.light-theme .text-slate-300 {
-  color: #55444d !important;
-}
-
-.light-theme .text-slate-400 {
-  color: #7b6671 !important;
-}
-
-.light-theme .text-slate-500 {
-  color: #7b6671 !important;
-}
-
-/* Primary Berry Wine Buttons & Elements */
-.btn-primary,
-button.bg-blue-600,
-.light-theme button.bg-blue-600,
-.bg-blue-600 {
-  background-color: #8e3a59 !important;
-  color: #ffffff !important;
-}
-
-button.bg-blue-600:hover,
-.light-theme button.bg-blue-600:hover,
-.bg-blue-600:hover {
-  background-color: #752d48 !important;
-}
-
-/* Retain explicit semantic button colors */
-button.bg-emerald-600,
-.light-theme button.bg-emerald-600 {
-  background-color: #16a34a !important;
-  color: #ffffff !important;
-}
-
-button.bg-rose-600,
-.light-theme button.bg-rose-600 {
-  background-color: #dc2626 !important;
-  color: #ffffff !important;
-}
-
-button.bg-slate-900,
-.light-theme button.bg-slate-900 {
-  background-color: #8e3a59 !important;
-  color: #ffffff !important;
-}
-
-/* Table zebra and hover states */
-.light-theme tr:hover {
-  background-color: #f7eef3 !important;
-}
-
-.light-theme th {
-  background-color: #f7eef3 !important;
-  color: #382c32 !important;
-  border-color: #d2b0bd !important;
-}
-
-.light-theme td {
-  border-color: #e8d8de !important;
-}
-
-/* Inputs, Selects, Textareas */
-.light-theme input,
-.light-theme select,
-.light-theme textarea {
-  background-color: #ffffff !important;
-  border-color: #d2b0bd !important;
-  color: #1e1b1d !important;
-}
-
-.light-theme input:focus,
-.light-theme select:focus,
-.light-theme textarea:focus {
-  border-color: #8e3a59 !important;
-  box-shadow: 0 0 0 2px rgba(142, 58, 89, 0.15) !important;
-}
-
-.light-theme input::placeholder,
-.light-theme textarea::placeholder {
-  color: #a58f9b !important;
-}
-
-/* Custom Scrollbars */
+/* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #fdf2f8;
+  background: #F5F7FB;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d2b0bd;
+  background: #D1D5DB;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #bb899b;
+  background: #9CA3AF;
 }

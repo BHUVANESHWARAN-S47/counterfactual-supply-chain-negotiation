@@ -7,7 +7,7 @@ interface KPICardProps {
   icon: React.ReactNode;
   trend?: string;
   trendPositive?: boolean;
-  accentColor?: 'berry' | 'emerald' | 'amber' | 'rose' | 'blue';
+  accentColor?: 'blue' | 'purple' | 'green' | 'orange' | 'red' | 'berry';
   sparklinePoints?: number[];
 }
 
@@ -18,39 +18,44 @@ export const KPICard: React.FC<KPICardProps> = ({
   icon,
   trend,
   trendPositive = true,
-  accentColor = 'berry',
+  accentColor = 'blue',
   sparklinePoints = [20, 24, 18, 30, 25, 38, 32, 45, 42, 50],
 }) => {
   const accentStyles = {
-    berry: {
-      iconBox: 'bg-[#fdf2f8] text-[#8e3a59] border-[#e8d8de]',
-      line: '#8e3a59',
-      fill: 'rgba(142, 58, 89, 0.08)',
+    blue: {
+      iconBox: 'bg-[#EFF6FF] text-[#2563EB] border-[#DBEAFE]',
+      line: '#2563EB',
+      fill: 'rgba(37, 99, 235, 0.08)',
     },
-    emerald: {
-      iconBox: 'bg-emerald-50 text-emerald-600 border-emerald-100',
-      line: '#10b981',
+    purple: {
+      iconBox: 'bg-[#F3E8FF] text-[#7C3AED] border-[#E9D5FF]',
+      line: '#7C3AED',
+      fill: 'rgba(124, 58, 237, 0.08)',
+    },
+    green: {
+      iconBox: 'bg-[#ECFDF5] text-[#10B981] border-[#A7F3D0]',
+      line: '#10B981',
       fill: 'rgba(16, 185, 129, 0.08)',
     },
-    amber: {
-      iconBox: 'bg-amber-50 text-amber-600 border-amber-100',
-      line: '#f59e0b',
+    orange: {
+      iconBox: 'bg-[#FFF7ED] text-[#F59E0B] border-[#FED7AA]',
+      line: '#F59E0B',
       fill: 'rgba(245, 158, 11, 0.08)',
     },
-    rose: {
-      iconBox: 'bg-rose-50 text-rose-600 border-rose-100',
-      line: '#f43f5e',
-      fill: 'rgba(244, 63, 94, 0.08)',
+    red: {
+      iconBox: 'bg-[#FEF2F2] text-[#EF4444] border-[#FECACA]',
+      line: '#EF4444',
+      fill: 'rgba(239, 68, 68, 0.08)',
     },
-    blue: {
-      iconBox: 'bg-[#fdf2f8] text-[#a5617a] border-[#e8d8de]',
-      line: '#a5617a',
-      fill: 'rgba(165, 97, 122, 0.08)',
+    berry: {
+      iconBox: 'bg-[#EFF6FF] text-[#2563EB] border-[#DBEAFE]',
+      line: '#2563EB',
+      fill: 'rgba(37, 99, 235, 0.08)',
     },
   }[accentColor] || {
-    iconBox: 'bg-[#fdf2f8] text-[#8e3a59] border-[#e8d8de]',
-    line: '#8e3a59',
-    fill: 'rgba(142, 58, 89, 0.08)',
+    iconBox: 'bg-[#EFF6FF] text-[#2563EB] border-[#DBEAFE]',
+    line: '#2563EB',
+    fill: 'rgba(37, 99, 235, 0.08)',
   };
 
   // Generate SVG path for sparkline
@@ -71,11 +76,11 @@ export const KPICard: React.FC<KPICardProps> = ({
   const areaPoints = `0,${height} ${points} ${width},${height}`;
 
   return (
-    <div className="relative overflow-hidden rounded-2xl p-5 border border-[#e8d8de] bg-white hover:border-[#8e3a59]/60 transition-all shadow-xs hover:shadow-md flex flex-col justify-between">
+    <div className="relative overflow-hidden rounded-2xl p-5 border border-[#E5E7EB] bg-white hover:border-[#2563EB]/40 transition-all shadow-xs hover:shadow-md flex flex-col justify-between">
       <div>
         {/* Top Header */}
         <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-semibold text-slate-500 tracking-tight">
+          <span className="text-xs font-semibold text-[#6B7280] tracking-tight">
             {title}
           </span>
           <div className={`p-2 rounded-xl border ${accentStyles.iconBox}`}>
@@ -85,15 +90,15 @@ export const KPICard: React.FC<KPICardProps> = ({
 
         {/* Value & Trend */}
         <div className="flex items-baseline gap-2 mb-1">
-          <span className="text-2xl font-bold text-slate-900 tracking-tight">
+          <span className="text-2xl font-bold text-[#111827] tracking-tight">
             {value}
           </span>
           {trend && (
             <span
               className={`inline-flex items-center gap-0.5 text-[11px] font-bold px-1.5 py-0.5 rounded-md ${
                 trendPositive
-                  ? 'bg-emerald-50 text-emerald-600'
-                  : 'bg-rose-50 text-rose-600'
+                  ? 'bg-[#ECFDF5] text-[#10B981]'
+                  : 'bg-[#FEF2F2] text-[#EF4444]'
               }`}
             >
               {trendPositive ? '↑' : '↓'} {trend}
@@ -103,7 +108,7 @@ export const KPICard: React.FC<KPICardProps> = ({
 
         {/* Subtitle */}
         {subtitle && (
-          <p className="text-[11px] text-slate-400 font-medium">{subtitle}</p>
+          <p className="text-[11px] text-[#9CA3AF] font-medium">{subtitle}</p>
         )}
       </div>
 

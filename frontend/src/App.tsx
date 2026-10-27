@@ -133,7 +133,7 @@ const AppContent: React.FC = () => {
   };
 
   return (
-    <div className="light-theme min-h-screen bg-[#fdf2f8] text-[#1e1b1d] flex flex-col font-sans">
+    <div className="light-theme min-h-screen bg-[#F5F7FB] text-[#111827] flex flex-col font-sans">
       <Navbar
         onOpenAssistant={() => setIsAssistantOpen(true)}
         onOpenNotifications={() => setActiveTab('notifications')}
@@ -141,7 +141,7 @@ const AppContent: React.FC = () => {
 
       <div className="flex flex-1 overflow-hidden">
         <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-        <main className="flex-1 p-6 overflow-y-auto max-h-[calc(100vh-4rem)] bg-[#fdf2f8]">
+        <main className="flex-1 p-6 overflow-y-auto max-h-[calc(100vh-4rem)] bg-[#F5F7FB]">
           <div className="max-w-7xl mx-auto">{renderActiveView()}</div>
         </main>
       </div>
