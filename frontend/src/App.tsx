@@ -4,6 +4,7 @@ import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import { AIAssistantModal } from './components/AIAssistantModal';
 import { LandingPage } from './pages/LandingPage';
+import { LoginPage } from './pages/LoginPage';
 
 // 7 Consolidated Modules
 import { OverviewDashboard } from './pages/OverviewDashboard';
@@ -27,6 +28,10 @@ const AppContent: React.FC = () => {
   const [selectedProcIdForNeg, setSelectedProcIdForNeg] = useState<number | undefined>(undefined);
   const [selectedSupIdForNeg, setSelectedSupIdForNeg] = useState<number | undefined>(undefined);
 
+  // Unauthenticated public view state ('landing' | 'login')
+  const [publicView, setPublicView] = useState<'landing' | 'login'>('landing');
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+
   // Automatically configure the default active tab based on the authenticated role
   useEffect(() => {
     if (isAuthenticated) {
@@ -42,9 +47,24 @@ const AppContent: React.FC = () => {
     }
   }, [isAuthenticated, role]);
 
-  // If user is not authenticated, render the public 2-page Landing Page
+  // If user is not authenticated, render either the Landing Page or dedicated full-screen LoginPage
   if (!isAuthenticated) {
-    return <LandingPage />;
+    if (publicView === 'login') {
+      return (
+        <LoginPage
+          initialMode={authMode}
+          onBackToLanding={() => setPublicView('landing')}
+        />
+      );
+    }
+    return (
+      <LandingPage
+        onGoToLogin={(mode) => {
+          setAuthMode(mode);
+          setPublicView('login');
+        }}
+      />
+    );
   }
 
   const handleNavigateToCNT = (procId: number) => {

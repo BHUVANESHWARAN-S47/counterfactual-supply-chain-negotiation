@@ -18,18 +18,26 @@ import {
   ChevronDown,
   ExternalLink,
 } from 'lucide-react';
-import { AuthModal } from '../components/AuthModal';
+import { LoginPage } from './LoginPage';
 import { UserRole } from '../types';
 
-export const LandingPage: React.FC = () => {
-  const [authModalOpen, setAuthModalOpen] = useState(false);
+interface LandingPageProps {
+  onGoToLogin?: (mode: 'login' | 'register') => void;
+}
+
+export const LandingPage: React.FC<LandingPageProps> = ({ onGoToLogin }) => {
+  const [showFullLoginPage, setShowFullLoginPage] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [targetRole, setTargetRole] = useState<UserRole>('ADMIN');
 
   const openAuth = (mode: 'login' | 'register', role: UserRole = 'ADMIN') => {
-    setAuthMode(mode);
-    setTargetRole(role);
-    setAuthModalOpen(true);
+    if (onGoToLogin) {
+      onGoToLogin(mode);
+    } else {
+      setAuthMode(mode);
+      setTargetRole(role);
+      setShowFullLoginPage(true);
+    }
   };
 
   const scrollToCapabilities = () => {
@@ -38,6 +46,16 @@ export const LandingPage: React.FC = () => {
       el.scrollIntoView({ behavior: 'smooth' });
     }
   };
+
+  if (showFullLoginPage) {
+    return (
+      <LoginPage
+        initialMode={authMode}
+        initialRole={targetRole}
+        onBackToLanding={() => setShowFullLoginPage(false)}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0B0F19] text-white font-sans selection:bg-blue-600 selection:text-white">
@@ -328,14 +346,6 @@ export const LandingPage: React.FC = () => {
           <span>All Systems Operational © 2026 Nexora Supply Chain Systems</span>
         </div>
       </footer>
-
-      {/* Auth Modal */}
-      <AuthModal
-        isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-        initialMode={authMode}
-        initialRole={targetRole}
-      />
     </div>
   );
 };
