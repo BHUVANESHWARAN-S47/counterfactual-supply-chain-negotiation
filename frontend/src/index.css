@@ -1,0 +1,209 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  --p1: #8e3a59;
+  --p1-hover: #752d48;
+  --p2: #a5617a;
+  --p3: #bb899b;
+  --p4: #d2b0bd;
+  --p5: #e8d8de;
+  --p-light: #fdf2f8;
+}
+
+body {
+  background-color: #fdf2f8;
+  color: #1e1b1d;
+  min-height: 100vh;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Palette utility classes */
+.bg-p1 { background-color: #8e3a59 !important; }
+.bg-p1-hover:hover { background-color: #752d48 !important; }
+.bg-p2 { background-color: #a5617a !important; }
+.bg-p3 { background-color: #bb899b !important; }
+.bg-p4 { background-color: #d2b0bd !important; }
+.bg-p5 { background-color: #e8d8de !important; }
+.bg-p-light { background-color: #fdf2f8 !important; }
+
+.text-p1 { color: #8e3a59 !important; }
+.text-p2 { color: #a5617a !important; }
+.text-p3 { color: #bb899b !important; }
+.border-p1 { border-color: #8e3a59 !important; }
+.border-p4 { border-color: #d2b0bd !important; }
+.border-p5 { border-color: #e8d8de !important; }
+
+/* Clean cards and panels */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid #d2b0bd;
+  box-shadow: 0 4px 12px -2px rgba(142, 58, 89, 0.06);
+}
+
+.glass-card {
+  background: #ffffff;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid #d2b0bd;
+  box-shadow: 0 2px 6px -1px rgba(142, 58, 89, 0.05);
+}
+
+.glow-berry {
+  box-shadow: 0 0 25px -4px rgba(142, 58, 89, 0.25);
+}
+
+/* Comprehensive Theme Normalization */
+.light-theme {
+  background-color: #fdf2f8;
+  color: #1e1b1d;
+}
+
+.light-theme .bg-slate-950 {
+  background-color: #fdf2f8 !important;
+}
+
+.light-theme .bg-slate-900 {
+  background-color: #ffffff !important;
+}
+
+.light-theme .bg-slate-850 {
+  background-color: #fdf2f8 !important;
+}
+
+.light-theme .bg-slate-800 {
+  background-color: #f7eef3 !important;
+}
+
+.light-theme .bg-slate-800\/50,
+.light-theme .bg-slate-900\/50,
+.light-theme .bg-slate-900\/60,
+.light-theme .bg-slate-900\/80,
+.light-theme .bg-slate-950\/60,
+.light-theme .bg-slate-950\/80 {
+  background-color: rgba(255, 255, 255, 0.96) !important;
+}
+
+.light-theme .border-slate-800,
+.light-theme .border-slate-700 {
+  border-color: #d2b0bd !important;
+}
+
+.light-theme .border-slate-800\/50,
+.light-theme .border-slate-700\/60,
+.light-theme .border-slate-700\/80 {
+  border-color: #e8d8de !important;
+}
+
+.light-theme .text-white {
+  color: #1e1b1d !important;
+}
+
+.light-theme .text-slate-100 {
+  color: #1e1b1d !important;
+}
+
+.light-theme .text-slate-200 {
+  color: #382c32 !important;
+}
+
+.light-theme .text-slate-300 {
+  color: #55444d !important;
+}
+
+.light-theme .text-slate-400 {
+  color: #7b6671 !important;
+}
+
+.light-theme .text-slate-500 {
+  color: #7b6671 !important;
+}
+
+/* Primary Berry Wine Buttons & Elements */
+.btn-primary,
+button.bg-blue-600,
+.light-theme button.bg-blue-600,
+.bg-blue-600 {
+  background-color: #8e3a59 !important;
+  color: #ffffff !important;
+}
+
+button.bg-blue-600:hover,
+.light-theme button.bg-blue-600:hover,
+.bg-blue-600:hover {
+  background-color: #752d48 !important;
+}
+
+/* Retain explicit semantic button colors */
+button.bg-emerald-600,
+.light-theme button.bg-emerald-600 {
+  background-color: #16a34a !important;
+  color: #ffffff !important;
+}
+
+button.bg-rose-600,
+.light-theme button.bg-rose-600 {
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+}
+
+button.bg-slate-900,
+.light-theme button.bg-slate-900 {
+  background-color: #8e3a59 !important;
+  color: #ffffff !important;
+}
+
+/* Table zebra and hover states */
+.light-theme tr:hover {
+  background-color: #f7eef3 !important;
+}
+
+.light-theme th {
+  background-color: #f7eef3 !important;
+  color: #382c32 !important;
+  border-color: #d2b0bd !important;
+}
+
+.light-theme td {
+  border-color: #e8d8de !important;
+}
+
+/* Inputs, Selects, Textareas */
+.light-theme input,
+.light-theme select,
+.light-theme textarea {
+  background-color: #ffffff !important;
+  border-color: #d2b0bd !important;
+  color: #1e1b1d !important;
+}
+
+.light-theme input:focus,
+.light-theme select:focus,
+.light-theme textarea:focus {
+  border-color: #8e3a59 !important;
+  box-shadow: 0 0 0 2px rgba(142, 58, 89, 0.15) !important;
+}
+
+.light-theme input::placeholder,
+.light-theme textarea::placeholder {
+  color: #a58f9b !important;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #fdf2f8;
+}
+::-webkit-scrollbar-thumb {
+  background: #d2b0bd;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #bb899b;
+}
