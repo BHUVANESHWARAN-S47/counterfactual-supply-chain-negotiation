@@ -124,7 +124,7 @@ export const ProcurementPage: React.FC<ProcurementPageProps> = ({
                       {p.required_by_date ? new Date(p.required_by_date).toLocaleDateString() : 'ASAP'}
                     </td>
                     <td className="py-3 px-4 text-right font-bold text-[#111827]">
-                      ${p.estimated_budget ? p.estimated_budget.toLocaleString() : 'N/A'}
+                      {p.estimated_budget ? `₹${p.estimated_budget.toLocaleString('en-IN')}` : 'N/A'}
                     </td>
                     <td className="py-3 px-4 text-center">
                       <span className="font-bold text-[#2563EB] bg-[#EFF6FF] px-2 py-0.5 rounded border border-[#DBEAFE]">
@@ -225,7 +225,7 @@ export const ProcurementPage: React.FC<ProcurementPageProps> = ({
                         </td>
                         <td className="py-3 px-4 font-bold text-[#111827]">{q.supplier_name}</td>
                         <td className="py-3 px-4 text-right font-mono font-bold text-[#111827]">
-                          ${q.unit_price.toFixed(2)}
+                          ₹{q.unit_price.toFixed(2)}
                         </td>
                         <td className="py-3 px-4 text-right text-[#6B7280]">{q.offered_quantity}</td>
                         <td className="py-3 px-4 text-right font-semibold text-[#111827]">

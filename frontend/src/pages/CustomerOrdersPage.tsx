@@ -125,7 +125,7 @@ export const CustomerOrdersPage: React.FC = () => {
                     {new Date(o.target_delivery_date).toLocaleDateString()}
                   </td>
                   <td className="py-3.5 px-4 font-bold text-[#111827] font-mono">
-                    ${o.max_budget.toLocaleString()}
+                    ₹{o.max_budget.toLocaleString('en-IN')}
                   </td>
                   <td className="py-3.5 px-4">
                     <StatusBadge status={o.status} />
@@ -188,7 +188,7 @@ export const CustomerOrdersPage: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[#374151] font-semibold mb-1">Max Budget ($)</label>
+                  <label className="block text-[#374151] font-semibold mb-1">Max Budget (₹ INR)</label>
                   <input
                     type="number"
                     min={100}

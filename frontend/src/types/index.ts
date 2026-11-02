@@ -265,6 +265,20 @@ export interface DashboardKPIs {
   shortage_items: number;
   total_pos: number;
   total_procurement_spend: number;
+  total_inventory_valuation?: number;
+  total_inventory_units?: number;
+  total_demand_value?: number;
+  total_supply_chain_cost?: number;
   customer_satisfaction_avg: number;
   on_time_delivery_rate: number;
+  inventory_categories?: { name: string; value: number; count: number; pct: number }[];
+  shipments_telemetry?: {
+    total: number;
+    in_transit: number;
+    delivered: number;
+    delayed: number;
+    at_risk: number;
+  };
+  cost_breakdown?: { name: string; value: number; pct: number }[];
 }
+

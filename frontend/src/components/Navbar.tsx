@@ -94,28 +94,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAssistant, onOpenNotificat
 
         {/* Right Controls */}
         <div className="flex items-center gap-2.5">
-          {/* Date Picker Button */}
-          <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#E5E7EB] bg-white hover:border-[#D1D5DB] text-xs font-semibold text-[#374151] transition shadow-2xs">
-            <Calendar className="h-3.5 w-3.5 text-[#2563EB]" />
-            <span className="text-[11px]">May 12 – May 19, 2026</span>
-          </div>
-
-          {/* AI Co-Pilot Button (Purple accent) */}
+          {/* AI Assistant Button (Purple accent) */}
           <button
             onClick={onOpenAssistant}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#E9D5FF] bg-[#F3E8FF] hover:bg-[#EDE9FE] text-[#7C3AED] text-xs font-semibold transition-all shadow-2xs cursor-pointer"
           >
             <Sparkles className="h-3.5 w-3.5 text-[#7C3AED]" />
-            <span className="hidden sm:inline">AI Co-Pilot</span>
-            <span
-              className={`text-[9px] px-1 py-0.2 rounded font-semibold ${
-                assistantStatus?.ollama_connected
-                  ? 'bg-emerald-100 text-emerald-800'
-                  : 'bg-purple-200 text-purple-900'
-              }`}
-            >
-              {assistantStatus?.ollama_connected ? 'LLaMA' : 'Active'}
-            </span>
+            <span className="hidden sm:inline">AI Assistant</span>
           </button>
 
           {/* Notifications Bell */}

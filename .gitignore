@@ -8,3 +8,5 @@ env/
 *.sqlite3
 *.db
 .system_generated/
+*.csv
+backend/data/

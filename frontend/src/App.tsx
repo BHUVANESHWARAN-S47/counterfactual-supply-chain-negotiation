@@ -6,7 +6,7 @@ import { AIAssistantModal } from './components/AIAssistantModal';
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
 
-// 7 Consolidated Modules
+// Core & Role Pages
 import { OverviewDashboard } from './pages/OverviewDashboard';
 import { CustomerOrdersPage } from './pages/CustomerOrdersPage';
 import { InventoryPage } from './pages/InventoryPage';
@@ -14,6 +14,10 @@ import { ProcurementPage } from './pages/ProcurementPage';
 import { CounterfactualTwinPage } from './pages/CounterfactualTwinPage';
 import { SupplierManagementPage } from './pages/SupplierManagementPage';
 import { ReportsPage } from './pages/ReportsPage';
+import { DecisionApprovalsPage } from './pages/DecisionApprovalsPage';
+import { UserManagementPage } from './pages/UserManagementPage';
+import { AgentMonitorPage } from './pages/AgentMonitorPage';
+import { CustomerFeedbackPage } from './pages/CustomerFeedbackPage';
 
 // Role Workspaces
 import { CustomerPortalPage } from './pages/CustomerPortalPage';
@@ -80,7 +84,7 @@ const AppContent: React.FC = () => {
 
   // Enforce role isolation in view rendering
   const renderActiveView = () => {
-    // Supplier role isolation
+    // 1. Supplier Role Modules
     if (role === 'SUPPLIER') {
       if (activeTab === 'suppliers') {
         return (
@@ -100,13 +104,13 @@ const AppContent: React.FC = () => {
       return <SupplierPortalPage />;
     }
 
-    // Customer role isolation
+    // 2. Customer Role Modules
     if (role === 'CUSTOMER') {
       if (activeTab === 'orders') {
         return <CustomerOrdersPage />;
       }
-      if (activeTab === 'reports') {
-        return <ReportsPage />;
+      if (activeTab === 'feedback') {
+        return <CustomerFeedbackPage />;
       }
       if (activeTab === 'notifications') {
         return <NotificationsPage />;
@@ -114,7 +118,36 @@ const AppContent: React.FC = () => {
       return <CustomerPortalPage />;
     }
 
-    // Admin & Procurement Manager: Exactly 7 Unified Modules
+    // 3. Admin Governance Modules
+    if (role === 'ADMIN') {
+      switch (activeTab) {
+        case 'overview':
+          return <OverviewDashboard onNavigate={setActiveTab} />;
+        case 'approvals':
+          return <DecisionApprovalsPage onNavigateToCNT={handleNavigateToCNT} />;
+        case 'users':
+          return <UserManagementPage />;
+        case 'agent-monitor':
+          return <AgentMonitorPage />;
+        case 'suppliers':
+          return (
+            <SupplierManagementPage
+              initialProcId={selectedProcIdForNeg}
+              initialSupplierId={selectedSupIdForNeg}
+            />
+          );
+        case 'orders':
+          return <CustomerOrdersPage />;
+        case 'reports':
+          return <ReportsPage />;
+        case 'notifications':
+          return <NotificationsPage />;
+        default:
+          return <OverviewDashboard onNavigate={setActiveTab} />;
+      }
+    }
+
+    // 4. Procurement Manager Operational Modules
     switch (activeTab) {
       case 'overview':
         return <OverviewDashboard onNavigate={setActiveTab} />;
@@ -148,7 +181,7 @@ const AppContent: React.FC = () => {
       case 'notifications':
         return <NotificationsPage />;
       default:
-        return <OverviewDashboard onNavigate={setActiveTab} />;
+        return <ProcurementPage onNavigateToCNT={handleNavigateToCNT} onNavigateToNegotiation={handleNavigateToNegotiation} />;
     }
   };
 
@@ -165,6 +198,22 @@ const AppContent: React.FC = () => {
           <div className="max-w-7xl mx-auto">{renderActiveView()}</div>
         </main>
       </div>
+
+      {/* Floating AI Co-Pilot Widget (Accessible across all roles) */}
+      <button
+        onClick={() => setIsAssistantOpen(true)}
+        className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 px-4 py-3 rounded-full bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] hover:from-[#6D28D9] hover:to-[#5B21B6] text-white shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-0.5 cursor-pointer border border-white/20 group"
+        title="Open AI Supply Chain Assistant"
+      >
+        <span className="p-1 rounded-full bg-white/20 group-hover:scale-110 transition-transform">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-white">
+            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+          </svg>
+        </span>
+        <span className="text-xs font-bold tracking-wide">
+          AI Assistant
+        </span>
+      </button>
 
       <AIAssistantModal isOpen={isAssistantOpen} onClose={() => setIsAssistantOpen(false)} />
     </div>

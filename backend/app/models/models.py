@@ -428,3 +428,102 @@ class AuditLog(Base):
     old_values = Column(JSON, nullable=True)
     new_values = Column(JSON, nullable=True)
     timestamp = Column(DateTime, default=datetime.utcnow)
+
+
+class DatasetSource(Base):
+    __tablename__ = "dataset_sources"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), unique=True, nullable=False)
+    source_url = Column(String(500), nullable=False)
+    license = Column(String(100), nullable=False)
+    file_format = Column(String(50), default="CSV")
+    verified_record_count = Column(Integer, default=0)
+    description = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    imports = relationship("DatasetImport", back_populates="source", cascade="all, delete-orphan")
+
+
+class DatasetImport(Base):
+    __tablename__ = "dataset_imports"
+
+    id = Column(Integer, primary_key=True, index=True)
+    source_id = Column(Integer, ForeignKey("dataset_sources.id"), nullable=False)
+    batch_number = Column(String(100), unique=True, index=True, nullable=False)
+    status = Column(String(50), default="PENDING")  # PENDING, RUNNING, COMPLETED, FAILED
+    total_source_rows = Column(Integer, default=0)
+    imported_rows = Column(Integer, default=0)
+    skipped_rows = Column(Integer, default=0)
+    error_message = Column(Text, nullable=True)
+    summary_stats = Column(JSON, nullable=True)
+    started_at = Column(DateTime, default=datetime.utcnow)
+    completed_at = Column(DateTime, nullable=True)
+
+    source = relationship("DatasetSource", back_populates="imports")
+    provenance_records = relationship("DatasetRowProvenance", back_populates="dataset_import", cascade="all, delete-orphan")
+
+
+class DatasetRowProvenance(Base):
+    __tablename__ = "dataset_row_provenance"
+
+    id = Column(Integer, primary_key=True, index=True)
+    import_id = Column(Integer, ForeignKey("dataset_imports.id"), nullable=False)
+    entity_type = Column(String(50), nullable=False, index=True)  # Product, CustomerOrder, Shipment, Supplier
+    entity_id = Column(String(100), nullable=False, index=True)
+    source_row_index = Column(Integer, nullable=False)
+    raw_source_identifier = Column(String(255), nullable=True)
+    data_hash = Column(String(64), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    dataset_import = relationship("DatasetImport", back_populates="provenance_records")
+
+
+class RiskAssessment(Base):
+    __tablename__ = "risk_assessments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    procurement_request_id = Column(Integer, ForeignKey("procurement_requests.id"), nullable=False)
+    supplier_id = Column(Integer, ForeignKey("suppliers.id"), nullable=False)
+    risk_score = Column(Float, nullable=False)  # 0.0 to 1.0 (lower is safer)
+    reliability_score = Column(Float, nullable=False)  # 0.0 to 1.0
+    lead_time_volatility = Column(Float, default=0.1)
+    disruption_probability = Column(Float, default=0.15)
+    justification = Column(Text, nullable=False)
+    evidence_data = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class LogisticsAssessment(Base):
+    __tablename__ = "logistics_assessments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    order_id = Column(Integer, ForeignKey("customer_orders.id"), nullable=False)
+    procurement_request_id = Column(Integer, ForeignKey("procurement_requests.id"), nullable=True)
+    carrier = Column(String(100), default="Express Freight Logistics")
+    origin = Column(String(255), nullable=False)
+    destination = Column(String(255), nullable=False)
+    estimated_lead_days = Column(Integer, nullable=False)
+    delay_risk_score = Column(Float, default=0.15)
+    transit_cost = Column(Float, default=0.0)
+    is_at_risk = Column(Boolean, default=False)
+    feasibility = Column(Boolean, default=True)
+    explanation = Column(Text, nullable=False)
+    evidence_data = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class CustomerImpactAssessment(Base):
+    __tablename__ = "customer_impact_assessments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    order_id = Column(Integer, ForeignKey("customer_orders.id"), nullable=False)
+    simulation_run_id = Column(Integer, ForeignKey("simulation_runs.id"), nullable=True)
+    decision_mode = Column(String(50), default="RETAIN")  # RETAIN, NEGOTIATE, SWITCH
+    service_level_impact_pct = Column(Float, default=0.0)
+    delay_days_expected = Column(Integer, default=0)
+    customer_sentiment_score = Column(Float, default=0.9)
+    customer_explanation = Column(Text, nullable=False)
+    internal_rationale = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+

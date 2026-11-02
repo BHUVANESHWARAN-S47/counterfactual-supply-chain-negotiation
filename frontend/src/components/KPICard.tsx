@@ -14,7 +14,7 @@ interface KPICardProps {
 export const KPICard: React.FC<KPICardProps> = ({
   title,
   value,
-  subtitle = 'vs May 5 – May 11',
+  subtitle = 'Real-time telemetry',
   icon,
   trend,
   trendPositive = true,

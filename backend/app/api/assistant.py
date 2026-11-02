@@ -1,84 +1,127 @@
+import re
+from typing import Optional
 from fastapi import APIRouter, Depends
+from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.models.models import CustomerOrder, Inventory, Supplier, Quotation, SimulationRun
+from app.core.security import security_scheme, decode_access_token
+from app.models.models import User
 from app.schemas.schemas import AssistantQueryRequest, AssistantQueryResponse
 from app.services.llm_assistant import LLMAssistantService
+from app.services.assistant_tools import AssistantDataTools
 
 router = APIRouter(prefix="/assistant", tags=["AI Assistant"])
 
 @router.get("/status")
 def get_assistant_engine_status():
-    ollama_online = LLMAssistantService.is_ollama_available()
-    return {
-        "ollama_connected": ollama_online,
-        "configured_model": "llama3" if ollama_online else "Fallback Rule Engine",
-        "active_mode": "Local LLaMA (Ollama)" if ollama_online else "Deterministic Heuristic Engine",
-        "fallback_available": True
-    }
+    return LLMAssistantService.get_engine_status()
 
 @router.post("/query", response_model=AssistantQueryResponse)
-def query_assistant(req: AssistantQueryRequest, db: Session = Depends(get_db)):
+def query_assistant(
+    req: AssistantQueryRequest,
+    auth: Optional[HTTPAuthorizationCredentials] = Depends(security_scheme),
+    db: Session = Depends(get_db)
+):
     """
-    Role-aware AI query grounded in real database context with Ollama + Rule-based fallback.
+    Role-authenticated natural language data retrieval and conversational reasoning.
+    Executes authorized parameterized database tools based on query intent.
+    Never leaks cross-role records and maintains context for follow-up questions.
     """
-    # Retrieve operational context
-    orders = db.query(CustomerOrder).order_by(CustomerOrder.created_at.desc()).limit(5).all()
-    orders_context = [
-        {
-            "order_number": o.order_number,
-            "product": o.product.name if o.product else "N/A",
-            "quantity": o.quantity,
-            "status": o.status,
-            "target_date": o.target_delivery_date.strftime("%Y-%m-%d")
-        }
-        for o in orders
-    ]
+    # 1. Determine verified user identity
+    user: Optional[User] = None
+    if auth and auth.credentials:
+        payload = decode_access_token(auth.credentials)
+        if payload and "sub" in payload:
+            user = db.query(User).filter(User.email == payload["sub"]).first()
 
-    shortage_items = db.query(Inventory).filter((Inventory.on_hand - Inventory.reserved) <= 50).all()
-    inventory_context = [
-        {
-            "product_name": inv.product.name if inv.product else "Item",
-            "available": inv.available,
-            "on_hand": inv.on_hand,
-            "shortage": max(0, 100 - inv.available)
-        }
-        for inv in shortage_items
-    ]
+    # Fallback to role-based system persona if using unauthenticated client session
+    if not user:
+        role_to_find = (req.role or "ADMIN").upper()
+        user = db.query(User).filter(User.role == role_to_find).first()
+        if not user:
+            user = db.query(User).first()
 
-    suppliers = db.query(Supplier).limit(4).all()
-    supplier_context = [
-        {
-            "name": s.name,
-            "rating": s.baseline_rating,
-            "lead_days": s.base_lead_time_days,
-            "reliability": s.reliability_score,
-            "risk": s.risk_score
-        }
-        for s in suppliers
-    ]
+    effective_role = user.role if user else (req.role or "ADMIN").upper()
+    p_lower = req.prompt.lower().strip()
 
-    latest_sim = db.query(SimulationRun).order_by(SimulationRun.created_at.desc()).first()
-    cnt_context = {}
-    if latest_sim:
-        cnt_context = {
-            "run_number": latest_sim.run_number,
-            "recommendation": latest_sim.recommendation,
-            "justification": latest_sim.justification,
-            "confidence": latest_sim.confidence_score
-        }
+    # 2. Select Authorized Tools according to user query intent
+    tool_data = {}
 
-    context = {
-        "orders": orders_context,
-        "inventory_alerts": inventory_context,
-        "top_suppliers": supplier_context,
-        "latest_cnt_recommendation": cnt_context
-    }
+    is_greeting = bool(re.match(r"^(hi|hello|hey|good\s*(morning|afternoon|evening)|greetings|howdy|hi\s*there)[!.,\s]*$", p_lower))
 
+    if not is_greeting:
+        # Check for Pending Approvals intent
+        if any(w in p_lower for w in ["approval", "approve", "waiting for approval", "decisions need", "pending supplier", "sign-off"]):
+            tool_data["pending_approvals"] = AssistantDataTools.get_pending_approvals(
+                db=db,
+                user=user,
+                limit=5
+            )
+
+        # Check for Inventory Shortages intent
+        elif any(w in p_lower for w in ["shortage", "inventory", "stock", "reorder", "low stock", "buffer level", "critical inventory"]):
+            tool_data["inventory"] = AssistantDataTools.search_inventory(
+                db=db,
+                user=user,
+                shortage_only=True,
+                limit=5
+            )
+
+        # Check for Supplier Comparison or Follow-up intent (Cheaper vs Delivery time)
+        elif any(w in p_lower for w in ["which supplier", "best supplier", "cheaper", "delivery time", "compare supplier", "lead time", "fastest supplier", "supplier recommendation"]):
+            # Extract order number from prompt or history
+            order_match = re.search(r"(ORD-\d+|PO-\d+)", req.prompt, re.IGNORECASE)
+            order_ref = order_match.group(1) if order_match else None
+            
+            # If not in current prompt, check recent conversation history
+            if not order_ref and req.history:
+                for h in reversed(req.history):
+                    h_text = h.get("content") or h.get("text") or ""
+                    prev_match = re.search(r"(ORD-\d+|PO-\d+)", h_text, re.IGNORECASE)
+                    if prev_match:
+                        order_ref = prev_match.group(1)
+                        break
+
+            tool_data["supplier_comparison"] = AssistantDataTools.compare_suppliers_for_order(
+                db=db,
+                user=user,
+                order_ref=order_ref
+            )
+
+        # Check for Purchase Orders intent
+        elif any(w in p_lower for w in ["purchase order", "open purchase order", "my purchase order", "po-"]):
+            tool_data["purchase_orders"] = AssistantDataTools.search_purchase_orders(
+                db=db,
+                user=user,
+                limit=5
+            )
+
+        # Check for Order Tracking / Status intent
+        elif any(w in p_lower for w in ["order", "track", "delayed", "late", "status", "delivery", "when will", "ord-"]):
+            tool_data["orders"] = AssistantDataTools.search_orders(
+                db=db,
+                user=user,
+                query=None,
+                delayed_only=("delay" in p_lower or "late" in p_lower),
+                limit=5
+            )
+
+        # Default fallback context if general inquiry
+        else:
+            if effective_role in ("ADMIN", "PROCUREMENT"):
+                tool_data["orders"] = AssistantDataTools.search_orders(db=db, user=user, limit=3)
+                tool_data["inventory"] = AssistantDataTools.search_inventory(db=db, user=user, shortage_only=True, limit=3)
+            elif effective_role == "SUPPLIER":
+                tool_data["purchase_orders"] = AssistantDataTools.search_purchase_orders(db=db, user=user, limit=3)
+            else:
+                tool_data["orders"] = AssistantDataTools.search_orders(db=db, user=user, limit=3)
+
+    # 3. Formulate Grounded Answer via Centralized LLM Engine
     result = LLMAssistantService.query_assistant(
         prompt=req.prompt,
-        role=req.role,
-        context=context
+        role=effective_role,
+        context=tool_data,
+        history=req.history
     )
 
     return AssistantQueryResponse(

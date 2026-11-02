@@ -147,13 +147,13 @@ export const ReportsPage: React.FC = () => {
         reportContent += `- Dispatch On-Time Adherence: 100%\n`;
         reportContent += `\nQUOTATIONS:\n`;
         quotations.forEach((q) => {
-          reportContent += `  • Quote #${q.quotation_number} | Qty: ${q.offered_quantity} | Unit Price: $${q.unit_price} | Lead: ${q.delivery_lead_days}d\n`;
+          reportContent += `  • Quote #${q.quotation_number} | Qty: ${q.offered_quantity} | Unit Price: ₹${q.unit_price} | Lead: ${q.delivery_lead_days}d\n`;
         });
       } else if (role === 'PROCUREMENT') {
         reportContent += `PROCUREMENT SOURCING & NEGOTIATION REPORT:\n`;
         reportContent += `- Sourcing Requisitions: ${procurements.length}\n`;
         reportContent += `- Concession Extracted: +${negMetrics?.average_concession_discount_pct ?? 7.8}%\n`;
-        reportContent += `- Total Savings: $6,000 below ceiling\n`;
+        reportContent += `- Total Savings: ₹6,000 below ceiling\n`;
         reportContent += `\nREQUISITIONS:\n`;
         procurements.forEach((p) => {
           reportContent += `  • Req #${p.request_number} | Shortage Qty: ${p.shortage_quantity} | Status: ${p.status}\n`;
@@ -335,7 +335,7 @@ export const ReportsPage: React.FC = () => {
             <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-xs">
               <span className="text-[11px] font-bold uppercase text-gray-500">Total Order Spend</span>
               <p className="text-2xl font-extrabold text-gray-900 mt-1">
-                ${(orders.reduce((sum, o) => sum + (o.max_budget || 0), 0) || 69000).toLocaleString()}
+                ₹{(orders.reduce((sum, o) => sum + (o.max_budget || 0), 0) || 69000).toLocaleString('en-IN')}
               </p>
               <p className="text-[11px] text-gray-500 mt-1">Audited procurement allocation</p>
             </div>
@@ -448,7 +448,7 @@ export const ReportsPage: React.FC = () => {
                         <td className="py-3 px-4">{o.product_name || `Product #${o.product_id}`}</td>
                         <td className="py-3 px-4 font-mono">{o.quantity} units</td>
                         <td className="py-3 px-4 text-gray-500">{new Date(o.target_delivery_date).toLocaleDateString()}</td>
-                        <td className="py-3 px-4 font-bold text-gray-900">${o.max_budget?.toLocaleString()}</td>
+                        <td className="py-3 px-4 font-bold text-gray-900">₹{o.max_budget?.toLocaleString('en-IN')}</td>
                         <td className="py-3 px-4">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
                             o.status === 'DELIVERED' || o.status === 'COMPLETED'
@@ -535,7 +535,7 @@ export const ReportsPage: React.FC = () => {
             </div>
             <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-xs">
               <span className="text-[11px] font-bold uppercase text-gray-500">Avg Quoted Rate</span>
-              <p className="text-2xl font-extrabold text-gray-900 mt-1">$42.80 / unit</p>
+              <p className="text-2xl font-extrabold text-gray-900 mt-1">₹42.80 / unit</p>
               <p className="text-[11px] text-gray-500 mt-1">Highly competitive catalog rate</p>
             </div>
           </div>
@@ -577,7 +577,7 @@ export const ReportsPage: React.FC = () => {
                         <td className="py-3 px-4 font-bold text-gray-900">#{q.quotation_number}</td>
                         <td className="py-3 px-4 text-gray-500">REQ-{q.procurement_request_id}</td>
                         <td className="py-3 px-4 font-mono">{q.offered_quantity} units</td>
-                        <td className="py-3 px-4 font-bold text-blue-600">${q.unit_price?.toFixed(2)}</td>
+                        <td className="py-3 px-4 font-bold text-blue-600">₹{q.unit_price?.toFixed(2)}</td>
                         <td className="py-3 px-4">{q.delivery_lead_days} days</td>
                         <td className="py-3 px-4 font-bold text-emerald-600">{q.reliability_score || 94}%</td>
                         <td className="py-3 px-4">{q.quality_rating || 4.8} / 5.0</td>
@@ -608,7 +608,7 @@ export const ReportsPage: React.FC = () => {
                     <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
                     <Bar dataKey="score" name="Composite Score (0-100)" fill={THEME_PALETTE.primary} radius={[6, 6, 0, 0]} />
                     <Bar dataKey="reliability" name="Reliability (%)" fill={THEME_PALETTE.emerald} radius={[6, 6, 0, 0]} />
-                    <Bar dataKey="price" name="Unit Rate ($)" fill={THEME_PALETTE.purple} radius={[6, 6, 0, 0]} />
+                    <Bar dataKey="price" name="Unit Rate (₹)" fill={THEME_PALETTE.purple} radius={[6, 6, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -677,7 +677,7 @@ export const ReportsPage: React.FC = () => {
             </div>
             <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-xs">
               <span className="text-[11px] font-bold uppercase text-gray-500">Procurement Budget Savings</span>
-              <p className="text-2xl font-extrabold text-gray-900 mt-1">$6,000 Saved</p>
+              <p className="text-2xl font-extrabold text-gray-900 mt-1">₹6,000 Saved</p>
               <p className="text-[11px] text-gray-500 mt-1">Below customer budget ceiling</p>
             </div>
           </div>
@@ -699,11 +699,11 @@ export const ReportsPage: React.FC = () => {
                   <LineChart data={concessionTrajectoryData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                     <XAxis dataKey="round" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${v}`} domain={[38, 52]} />
-                    <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #E5E7EB', borderRadius: '10px', fontSize: '11px' }} formatter={(v: any) => [`$${v}`, 'Unit Price']} />
+                    <YAxis tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} tickFormatter={(v) => `₹${v}`} domain={[38, 52]} />
+                    <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #E5E7EB', borderRadius: '10px', fontSize: '11px' }} formatter={(v: any) => [`₹${v}`, 'Unit Price']} />
                     <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
-                    <Line type="monotone" dataKey="initialPrice" name="Vendor Baseline Price ($)" stroke={THEME_PALETTE.slate} strokeWidth={2} strokeDasharray="4 4" />
-                    <Line type="monotone" dataKey="negotiatedPrice" name="Buyer Extracted Price ($)" stroke={THEME_PALETTE.emerald} strokeWidth={2.5} dot={{ r: 4, fill: THEME_PALETTE.emerald }} />
+                    <Line type="monotone" dataKey="initialPrice" name="Vendor Baseline Price (₹)" stroke={THEME_PALETTE.slate} strokeWidth={2} strokeDasharray="4 4" />
+                    <Line type="monotone" dataKey="negotiatedPrice" name="Buyer Extracted Price (₹)" stroke={THEME_PALETTE.emerald} strokeWidth={2.5} dot={{ r: 4, fill: THEME_PALETTE.emerald }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -784,7 +784,7 @@ export const ReportsPage: React.FC = () => {
                         <td className="py-3 px-4 font-bold text-gray-900">#{p.request_number}</td>
                         <td className="py-3 px-4 font-medium">{p.product_name || `Product #${p.product_id}`}</td>
                         <td className="py-3 px-4 font-mono text-red-600 font-bold">{p.shortage_quantity} units</td>
-                        <td className="py-3 px-4 font-bold text-gray-900">${p.estimated_budget?.toLocaleString()}</td>
+                        <td className="py-3 px-4 font-bold text-gray-900">₹{p.estimated_budget?.toLocaleString('en-IN')}</td>
                         <td className="py-3 px-4 font-mono">{p.quotations_count || 3} submitted</td>
                         <td className="py-3 px-4">
                           <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
@@ -895,7 +895,7 @@ export const ReportsPage: React.FC = () => {
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <span className="text-lg font-extrabold text-gray-900">$63.0k</span>
+                    <span className="text-lg font-extrabold text-gray-900">₹63.0k</span>
                     <span className="text-[10px] text-gray-400 font-semibold uppercase">Total Spend</span>
                   </div>
                 </div>

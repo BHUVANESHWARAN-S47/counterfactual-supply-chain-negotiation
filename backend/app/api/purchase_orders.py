@@ -176,3 +176,84 @@ def approve_supplier_and_create_po(
         approved_at=po.approved_at,
         created_at=po.created_at
     )
+
+@router.get("/pending-approvals")
+def get_pending_approvals(db: Session = Depends(get_db)):
+    """
+    Returns all customer orders and procurement requests awaiting Admin sign-off,
+    including Decision Agent recommendation, simulation summary, and supplier details.
+    """
+    orders = db.query(CustomerOrder).filter(
+        CustomerOrder.status.in_(["AWAITING_APPROVAL", "SIMULATION_COMPLETED"])
+    ).order_by(CustomerOrder.created_at.desc()).all()
+
+    approvals = []
+    for o in orders:
+        proc = o.procurement_requests[0] if o.procurement_requests else None
+        sim = o.simulation_runs[0] if o.simulation_runs else None
+        
+        recommended_supplier = "Alpha Industrial Supplies"
+        rec_supplier_id = 1
+        rec_unit_price = o.product.unit_cost if o.product else 45.0
+        rec_lead_days = 7
+        rec_decision = sim.recommendation if sim else "NEGOTIATE"
+        justification = sim.justification if sim else "Multi-agent evaluation recommends negotiation within target margins."
+        
+        if proc and proc.quotations:
+            best_q = min(proc.quotations, key=lambda q: q.unit_price)
+            recommended_supplier = best_q.supplier.name if best_q.supplier else "Alpha Industrial Supplies"
+            rec_supplier_id = best_q.supplier_id
+            rec_unit_price = best_q.unit_price
+            rec_lead_days = best_q.delivery_lead_days
+
+        approvals.append({
+            "order_id": o.id,
+            "order_number": o.order_number,
+            "procurement_request_id": proc.id if proc else None,
+            "procurement_request_number": proc.request_number if proc else None,
+            "customer_name": o.customer.name if o.customer else "Customer",
+            "customer_company": o.customer.company if o.customer else "Acme Corp",
+            "product_name": o.product.name if o.product else "Components",
+            "quantity": o.quantity,
+            "max_budget": o.max_budget,
+            "target_delivery_date": o.target_delivery_date.isoformat(),
+            "recommendation": rec_decision,
+            "recommended_supplier_id": rec_supplier_id,
+            "recommended_supplier_name": recommended_supplier,
+            "recommended_unit_price": rec_unit_price,
+            "recommended_lead_days": rec_lead_days,
+            "total_estimated_cost": round(o.quantity * rec_unit_price, 2),
+            "status": o.status,
+            "justification": justification,
+            "created_at": o.created_at.isoformat()
+        })
+    return approvals
+
+@router.post("/{order_id}/reject")
+def reject_approval_recommendation(order_id: int, reason: str = "Admin requested re-evaluation of supplier alternatives", db: Session = Depends(get_db)):
+    order = db.query(CustomerOrder).filter(CustomerOrder.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    order.status = "AWAITING_QUOTATIONS"
+    order.customer_explanation = f"Procurement decision re-evaluation requested: {reason}"
+    
+    notif = Notification(
+        role="PROCUREMENT",
+        title=f"Approval Rejected: #{order.order_number}",
+        message=f"Admin returned order #{order.order_number} for further negotiation: {reason}",
+        event_type="APPROVAL_REJECTED",
+        related_order_id=order.id
+    )
+    db.add(notif)
+    
+    audit = AuditLog(
+        action="APPROVAL_REJECTED",
+        entity_type="CustomerOrder",
+        entity_id=order.order_number,
+        new_values={"reason": reason, "status": "AWAITING_QUOTATIONS"}
+    )
+    db.add(audit)
+    db.commit()
+    return {"message": "Recommendation rejected and returned to Procurement queue", "status": "AWAITING_QUOTATIONS"}
+

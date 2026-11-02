@@ -127,7 +127,7 @@ export const SupplierPortalPage: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[#374151] mb-1 font-semibold">Offered Rate ($/unit)</label>
+                <label className="block text-[#374151] mb-1 font-semibold">Offered Rate (₹/unit)</label>
                 <input
                   type="number"
                   step="0.1"
@@ -214,9 +214,9 @@ export const SupplierPortalPage: React.FC = () => {
                         <td className="py-3.5 px-4 font-bold text-[#111827]">{po.po_number}</td>
                         <td className="py-3.5 px-4 font-semibold text-[#374151]">{po.order_number || 'Industrial Component'}</td>
                         <td className="py-3.5 px-4 text-right font-bold text-[#111827]">{po.quantity}</td>
-                        <td className="py-3.5 px-4 text-right font-mono text-[#374151]">${po.unit_price.toFixed(2)}</td>
+                        <td className="py-3.5 px-4 text-right font-mono text-[#374151]">₹{po.unit_price.toFixed(2)}</td>
                         <td className="py-3.5 px-4 text-right font-bold text-[#10B981] font-mono">
-                          ${po.total_amount.toLocaleString()}
+                          ₹{po.total_amount.toLocaleString('en-IN')}
                         </td>
                         <td className="py-3.5 px-4">
                           <StatusBadge status={po.status} />

@@ -319,8 +319,8 @@ def seed_database(db: Session):
         round_number=1,
         offered_price=44.50,
         offered_lead_days=6,
-        message="Initial catalog quotation submitted at $44.50/unit for 90 units.",
-        ai_suggestion="Opening quote is within 6% of target. Suggested counteroffer: $41.00 (7.8% discount)."
+        message="Initial catalog quotation submitted at ₹44.50/unit for 90 units.",
+        ai_suggestion="Opening quote is within 6% of target. Suggested counteroffer: ₹41.00 (7.8% discount)."
     )
     m2 = NegotiationMessage(
         session_id=neg_session.id,
@@ -329,7 +329,7 @@ def seed_database(db: Session):
         round_number=1,
         offered_price=41.00,
         offered_lead_days=6,
-        message="We counter with $41.00/unit based on recurring quarterly volume and market index.",
+        message="We counter with ₹41.00/unit based on recurring quarterly volume and market index.",
         ai_suggestion="Counter submitted within buyer target bounds."
     )
     m3 = NegotiationMessage(
@@ -339,8 +339,8 @@ def seed_database(db: Session):
         round_number=2,
         offered_price=43.00,
         offered_lead_days=6,
-        message="We can compromise at $43.00/unit with guaranteed priority testing included.",
-        ai_suggestion="Supplier conceded $1.50/unit. Next round can target final agreement around $42.00."
+        message="We can compromise at ₹43.00/unit with guaranteed priority testing included.",
+        ai_suggestion="Supplier conceded ₹1.50/unit. Next round can target final agreement around ₹42.00."
     )
     db.add_all([m1, m2, m3])
 
@@ -352,7 +352,7 @@ def seed_database(db: Session):
         run_type="COUNTERFACTUAL_COMPARISON",
         recommendation="NEGOTIATE",
         justification=(
-            "CNT simulation projects a +$420.00 profit increase (61.2% vs 58.4% margin) with Apex Components Ltd "
+            "CNT simulation projects a +₹420.00 profit increase (61.2% vs 58.4% margin) with Apex Components Ltd "
             "under an 8% targeted counteroffer while preserving full delivery compliance (0 days deadline variance)."
         ),
         trade_offs="Trade-off: Requires 1 round of automated AI counteroffer. Supplier historical concession probability is 78%. Fallback to baseline remains 100% schedule-safe.",

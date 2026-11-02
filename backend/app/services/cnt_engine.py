@@ -122,8 +122,9 @@ class CounterfactualNegotiationTwin:
             "trade_offs": trade_offs,
             "customer_impact_summary": customer_impact,
             "confidence_score": 0.91,
-            "scenarios": [s.dict() for s in scenarios]
+            "scenarios": [s.model_dump() for s in scenarios]
         }
+
 
     @staticmethod
     def _calculate_scenario(

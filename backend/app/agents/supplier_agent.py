@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.agents.base_agent import BaseAgent
 from app.models.models import ProcurementRequest, Supplier, Quotation
 from app.services.supplier_evaluator import SupplierEvaluator
+from app.services.llm_service import CentralizedLLMService
 
 class SupplierAgent(BaseAgent):
     name: str = "Supplier Agent"
@@ -81,17 +82,37 @@ class SupplierAgent(BaseAgent):
                 q_rec.rank = item["rank"]
         db.commit()
 
+        # LLM Synthesis of Supplier Landscape
+        top_name = evaluated[0]["supplier_name"] if evaluated else "None"
+        top_price = evaluated[0]["unit_price"] if evaluated else 0.0
+        top_lead = evaluated[0]["delivery_lead_days"] if evaluated else 0
+        llm_prompt = (
+            f"Analyze supplier market response for Procurement {proc.request_number}:\n"
+            f"- Total evaluated quotes: {len(evaluated)}\n"
+            f"- Top ranked vendor: {top_name} (Price: ₹{top_price}/unit, Lead: {top_lead} days)\n"
+            f"- Score breakdown: {evaluated[0].get('score_breakdown', {}) if evaluated else {}}\n"
+            f"Summarize in 2 sentences the key vendor trade-off between price vs delivery reliability."
+        )
+        llm_res = CentralizedLLMService.generate(
+            prompt=llm_prompt,
+            system_prompt="You are an expert Supplier Management Agent. Assess supplier reliability and market competitiveness.",
+            max_tokens=150,
+            correlation_id=task.task_number
+        )
+
         cls.log(
             db,
             task.id,
-            f"Successfully ranked {len(evaluated)} supplier quotations. Top: {evaluated[0]['supplier_name']} (Score: {evaluated[0]['total_score']})",
+            f"Successfully ranked {len(evaluated)} supplier quotations. Top: {top_name}",
             details={"rankings": evaluated}
         )
 
         output = {
             "total_quotations": len(evaluated),
             "top_supplier": evaluated[0] if evaluated else None,
-            "ranked_quotations": evaluated
+            "ranked_quotations": evaluated,
+            "supplier_agent_reasoning": llm_res.content.strip()
         }
         cls.complete_task(db, task, output)
         return output
+

@@ -11,11 +11,14 @@ import {
   Bell,
   Truck,
   UserCheck,
-  Sun,
-  Moon,
   Globe,
   ChevronDown,
   Sparkles,
+  ShieldCheck,
+  Activity,
+  Eye,
+  MessageSquare,
+  Building2,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -25,17 +28,29 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
   const { role } = useAuth();
-  const [themeMode, setThemeMode] = useState<'light' | 'dark'>('light');
 
-  // Exactly 7 core modules for Admin and Procurement Manager
-  const enterpriseModules = [
-    { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },
+  // Dedicated Admin Governance Navigation
+  const adminModules = [
+    { id: 'overview', label: 'Admin Dashboard', icon: LayoutDashboard },
+    { id: 'approvals', label: 'Waiting for Approval', icon: ShieldCheck },
+    { id: 'users', label: 'User & Role Mgmt', icon: Users },
+    { id: 'suppliers', label: 'Supplier Governance', icon: Building2 },
+    { id: 'orders', label: 'Demand Oversight', icon: Eye },
+    { id: 'agent-monitor', label: 'Task & System Status', icon: Activity, isAi: true },
+    { id: 'reports', label: 'Reports & Governance', icon: BarChart3 },
+    { id: 'notifications', label: 'Governance Alerts', icon: Bell },
+  ];
+
+  // Dedicated Operational Procurement Manager Navigation
+  const procurementModules = [
+    { id: 'overview', label: 'Purchasing Dashboard', icon: LayoutDashboard },
     { id: 'orders', label: 'Customer Demand', icon: ShoppingCart },
-    { id: 'inventory', label: 'Inventory & Stock', icon: Package },
-    { id: 'procurement', label: 'Procurement & RFQs', icon: Layers },
-    { id: 'cnt', label: 'Counterfactual Twin', icon: Cpu, isAi: true },
+    { id: 'inventory', label: 'Stock & Inventory', icon: Package },
+    { id: 'procurement', label: 'Purchasing & Quotes', icon: Layers },
+    { id: 'cnt', label: 'Compare Suppliers', icon: Cpu, isAi: true },
     { id: 'suppliers', label: 'Suppliers & Negotiation', icon: Users },
-    { id: 'reports', label: 'Reports & Analytics', icon: BarChart3 },
+    { id: 'reports', label: 'Purchasing Analytics', icon: BarChart3 },
+    { id: 'notifications', label: 'Alerts & Messages', icon: Bell },
   ];
 
   // Role dedicated portals
@@ -49,11 +64,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
   const customerModules = [
     { id: 'customer-portal', label: 'Customer Workspace', icon: UserCheck },
     { id: 'orders', label: 'Order Tracking & SLA', icon: ShoppingCart },
-    { id: 'reports', label: 'Delivery Analytics', icon: BarChart3 },
+    { id: 'feedback', label: 'Delivery Feedback', icon: MessageSquare },
     { id: 'notifications', label: 'Notifications', icon: Bell },
   ];
 
-  let activeNavItems = enterpriseModules;
+  let activeNavItems = procurementModules;
+  if (role === 'ADMIN') activeNavItems = adminModules;
   if (role === 'SUPPLIER') activeNavItems = supplierModules;
   if (role === 'CUSTOMER') activeNavItems = customerModules;
 
@@ -64,9 +80,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
         <div>
           <div className="px-3 mb-2 text-[11px] font-bold uppercase tracking-wider text-[#9CA3AF]">
             {role === 'ADMIN'
-              ? 'Admin Modules (7)'
+              ? 'Admin Modules'
               : role === 'PROCUREMENT'
-              ? 'Procurement Modules (7)'
+              ? 'Procurement Modules'
               : role === 'SUPPLIER'
               ? 'Supplier Portal'
               : 'Customer Portal'}
@@ -113,31 +129,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
 
       {/* Bottom Controls matching Screenshot */}
       <div className="space-y-3 pt-4 border-t border-[#F3F4F6]">
-        {/* Dark / Light Toggle Pill */}
-        <div className="flex items-center justify-between p-1 rounded-xl bg-[#F3F4F6] border border-[#E5E7EB]">
-          <button
-            onClick={() => setThemeMode('light')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition ${
-              themeMode === 'light'
-                ? 'bg-white text-[#111827] shadow-2xs font-bold'
-                : 'text-[#6B7280] hover:text-[#111827]'
-            }`}
-          >
-            <Sun className="h-3.5 w-3.5 text-[#F59E0B]" />
-            <span>Light</span>
-          </button>
-          <button
-            onClick={() => setThemeMode('dark')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition ${
-              themeMode === 'dark'
-                ? 'bg-white text-[#111827] shadow-2xs font-bold'
-                : 'text-[#6B7280] hover:text-[#111827]'
-            }`}
-          >
-            <Moon className="h-3.5 w-3.5 text-[#6B7280]" />
-            <span>Dark</span>
-          </button>
-        </div>
+
 
         {/* Global View Selector Pill */}
         <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-white border border-[#E5E7EB] hover:border-[#D1D5DB] transition cursor-pointer text-xs text-[#374151]">

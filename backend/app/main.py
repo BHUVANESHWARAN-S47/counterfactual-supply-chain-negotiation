@@ -22,6 +22,7 @@ from app.api.feedback import router as feedback_router
 from app.api.reports import router as reports_router
 from app.api.assistant import router as assistant_router
 from app.api.users import router as users_router
+from app.api.datasets import router as datasets_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -31,6 +32,13 @@ async def lifespan(app: FastAPI):
     db = SessionLocal()
     try:
         seed_database(db)
+        # Register benchmark dataset sources
+        from app.services.dataset_pipeline import DatasetIngestionPipeline
+        DatasetIngestionPipeline.register_or_get_source(db, "DATACO")
+        DatasetIngestionPipeline.register_or_get_source(db, "UCI_ONLINE_RETAIL")
+        # Initialize and verify Centralized LLM Engine
+        from app.services.llm_service import CentralizedLLMService
+        CentralizedLLMService.initialize()
     finally:
         db.close()
     yield
@@ -68,6 +76,8 @@ app.include_router(feedback_router, prefix=settings.API_V1_STR)
 app.include_router(reports_router, prefix=settings.API_V1_STR)
 app.include_router(assistant_router, prefix=settings.API_V1_STR)
 app.include_router(users_router, prefix=settings.API_V1_STR)
+app.include_router(datasets_router, prefix=settings.API_V1_STR)
+
 
 @app.get("/")
 def root():

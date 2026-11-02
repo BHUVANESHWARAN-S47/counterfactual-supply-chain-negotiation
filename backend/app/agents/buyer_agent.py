@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.agents.base_agent import BaseAgent
 from app.models.models import CustomerOrder, ProcurementRequest, Product
 from app.services.inventory_service import InventoryService
+from app.services.llm_service import CentralizedLLMService
 
 class BuyerAgent(BaseAgent):
     name: str = "Buyer Agent"
@@ -12,7 +13,7 @@ class BuyerAgent(BaseAgent):
     def execute(cls, db: Session, order_id: int) -> Dict[str, Any]:
         """
         Calculates procurement needs, checks inventory availability and shortages,
-        and generates formal procurement requirements.
+        synthesizes market lead constraints via LLM, and generates formal procurement requirements.
         """
         order = db.query(CustomerOrder).filter(CustomerOrder.id == order_id).first()
         if not order:
@@ -21,13 +22,32 @@ class BuyerAgent(BaseAgent):
         task = cls.create_task(db, related_order_id=order_id, input_payload={"order_id": order_id, "quantity": order.quantity})
         cls.log(db, task.id, f"Evaluating inventory shortage for Customer Order #{order.order_number}")
 
-        # Check inventory shortage
+        # Check inventory shortage deterministically
         shortage_res = InventoryService.calculate_shortage(db, order.product_id, order.quantity)
         cls.log(
             db,
             task.id,
             f"Inventory Check: Available={shortage_res.available_stock}, Shortage={shortage_res.shortage_quantity}",
-            details=shortage_res.dict()
+            details=shortage_res.model_dump()
+        )
+
+        # LLM Reasoning on Sourcing Urgency and Budget Allocation
+        product_name = order.product.name if order.product else "Item"
+        llm_prompt = (
+            f"Evaluate procurement urgency for Customer Order {order.order_number}:\n"
+            f"- Product: {product_name}\n"
+            f"- Total Required: {order.quantity} units\n"
+            f"- Warehouse Available: {shortage_res.available_stock} units\n"
+            f"- Net Sourcing Shortage: {shortage_res.shortage_quantity} units\n"
+            f"- Target Customer Delivery: {order.target_delivery_date.strftime('%Y-%m-%d')}\n"
+            f"- Max Budget: ₹{order.max_budget}\n"
+            f"Provide a 2-sentence procurement brief focusing on lead schedule risk and sourcing recommendation."
+        )
+        llm_res = CentralizedLLMService.generate(
+            prompt=llm_prompt,
+            system_prompt="You are an expert Enterprise Buyer Agent. Formulate concise, actionable sourcing strategy.",
+            max_tokens=150,
+            correlation_id=task.task_number
         )
 
         # Check existing procurement request
@@ -62,7 +82,9 @@ class BuyerAgent(BaseAgent):
             "shortage_quantity": proc.shortage_quantity,
             "required_by_date": proc.required_by_date.isoformat(),
             "estimated_budget": proc.estimated_budget,
-            "status": proc.status
+            "status": proc.status,
+            "buyer_reasoning": llm_res.content.strip()
         }
         cls.complete_task(db, task, output)
         return output
+

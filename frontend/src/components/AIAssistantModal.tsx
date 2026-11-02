@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Sparkles, Send, X, Bot, User, ChevronDown, ChevronUp } from 'lucide-react';
+import { Sparkles, Send, X, Bot, User, Shield, Briefcase, Truck, UserCheck } from 'lucide-react';
 import { api } from '../services/api';
 
 interface AIAssistantModalProps {
@@ -11,32 +11,96 @@ interface AIAssistantModalProps {
 interface Message {
   sender: 'user' | 'assistant';
   text: string;
-  modelUsed?: string;
-  isFallback?: boolean;
   suggestedActions?: string[];
-  contextRetrieved?: any;
 }
 
 export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({ isOpen, onClose }) => {
   const { role } = useAuth();
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<any>(null);
+
+  // Role Configuration Definitions
+  const roleConfigs: Record<string, {
+    title: string;
+    subtitle: string;
+    badge: string;
+    icon: any;
+    greeting: string;
+    prompts: string[];
+  }> = {
+    ADMIN: {
+      title: 'AI Assistant',
+      subtitle: 'Track orders, review approvals, and monitor system tasks',
+      badge: 'Admin Assistant',
+      icon: Shield,
+      greeting: `Hello! I can help you check orders, review supplier quotations, track purchasing tasks, and understand supply chain reports. What would you like to know?`,
+      prompts: [
+        'Which decisions need approval?',
+        'Show suppliers that need attention.',
+        'Summarize recent system issues.',
+        'Show inventory shortages.',
+      ],
+    },
+    PROCUREMENT: {
+      title: 'AI Assistant',
+      subtitle: 'Supplier comparison, quotation analysis, and purchasing requests',
+      badge: 'Purchasing Assistant',
+      icon: Briefcase,
+      greeting: `Hello! I can help you compare supplier quotations, identify stock shortages, and review purchasing requests. What would you like to know?`,
+      prompts: [
+        'Which requests need suppliers?',
+        'Compare quotations for an order.',
+        'Show inventory shortages.',
+        'Explain the latest supplier recommendation.',
+      ],
+    },
+    SUPPLIER: {
+      title: 'AI Assistant',
+      subtitle: 'Quotation requests, purchase orders, and delivery lead times',
+      badge: 'Supplier Assistant',
+      icon: Truck,
+      greeting: `Hello! I can help you review quotation requests, check open purchase orders, and track delivery dates. What would you like to review?`,
+      prompts: [
+        'Which quotation requests need my response?',
+        'Show my open purchase orders.',
+        'Which deliveries need an update?',
+      ],
+    },
+    CUSTOMER: {
+      title: 'AI Assistant',
+      subtitle: 'Order tracking, delivery dates, and status inquiries',
+      badge: 'Customer Assistant',
+      icon: UserCheck,
+      greeting: `Hello! I can help you track your orders, check expected delivery dates, and review shipment status. What would you like to know?`,
+      prompts: [
+        'Track my order.',
+        'Show my recent orders.',
+        'When is my next delivery expected?',
+      ],
+    },
+  };
+
+  const currentConfig = roleConfigs[role] || roleConfigs['ADMIN'];
+
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: 'assistant',
-      text: `Hello! I am your Supply Chain AI Co-Pilot. Grounded in live verified operational data across inventory shortages, supplier quotations, and Counterfactual Negotiation Twin simulations. How can I assist your department today?`,
-      modelUsed: 'Deterministic Heuristic Engine (Ollama Fallback)',
-      isFallback: true,
-      suggestedActions: [
-        'Explain latest CNT simulation recommendation',
-        'Check current warehouse shortages',
-        'Show top ranked supplier scorecard',
-        'Recommend buyer negotiation strategy',
-      ],
+      text: currentConfig.greeting,
+      suggestedActions: currentConfig.prompts,
     },
   ]);
-  const [status, setStatus] = useState<any>(null);
-  const [expandedContextIndex, setExpandedContextIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    const cfg = roleConfigs[role] || roleConfigs['ADMIN'];
+    setMessages([
+      {
+        sender: 'assistant',
+        text: cfg.greeting,
+        suggestedActions: cfg.prompts,
+      },
+    ]);
+  }, [role]);
 
   useEffect(() => {
     if (isOpen) {
@@ -51,19 +115,23 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({ isOpen, onCl
     if (!queryText.trim() || loading) return;
 
     const userMsg: Message = { sender: 'user', text: queryText };
-    setMessages((prev) => [...prev, userMsg]);
+    const updatedMessages = [...messages, userMsg];
+    setMessages(updatedMessages);
     setInput('');
     setLoading(true);
 
     try {
-      const resp = await api.queryAssistant(queryText, role);
+      // Pass previous conversational exchanges for follow-up resolution
+      const history = updatedMessages.slice(-6).map((m) => ({
+        role: m.sender === 'user' ? 'user' : 'assistant',
+        content: m.text,
+      }));
+
+      const resp = await api.queryAssistant(queryText, role, undefined, history);
       const assistantMsg: Message = {
         sender: 'assistant',
         text: resp.answer,
-        modelUsed: resp.model_used,
-        isFallback: resp.is_fallback,
         suggestedActions: resp.suggested_actions,
-        contextRetrieved: resp.context_retrieved,
       };
       setMessages((prev) => [...prev, assistantMsg]);
     } catch (err: any) {
@@ -71,7 +139,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({ isOpen, onCl
         ...prev,
         {
           sender: 'assistant',
-          text: `Error connecting to assistant service: ${err.message}`,
+          text: `I'm temporarily unable to retrieve this information. Please try again shortly.`,
         },
       ]);
     } finally {
@@ -79,39 +147,38 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({ isOpen, onCl
     }
   };
 
+  const CurrentRoleIcon = currentConfig.icon;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl bg-white border border-[#E5E7EB] rounded-3xl shadow-2xl flex flex-col h-[650px] overflow-hidden text-[#111827]">
-        {/* Header (Soft Purple Accent) */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5E7EB] bg-[#F5F7FB]">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-[#7C3AED] text-white shadow-sm">
-              <Sparkles className="h-5 w-5" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="relative w-full max-w-2xl bg-white border border-[#E5E7EB] rounded-3xl shadow-2xl flex flex-col h-[670px] overflow-hidden text-[#111827]">
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-[#E5E7EB] bg-[#F5F7FB]">
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-[#7C3AED] text-white shadow-sm">
+                <CurrentRoleIcon className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-[#111827] flex items-center gap-2">
+                  {currentConfig.title}
+                  <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Ready
+                  </span>
+                </h3>
+                <p className="text-xs text-[#6B7280]">
+                  {currentConfig.subtitle}
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-sm font-bold text-[#111827] flex items-center gap-2">
-                Supply Chain AI Co-Pilot
-                <span
-                  className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                    status?.ollama_connected
-                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                      : 'bg-purple-100 text-purple-800 border border-purple-200'
-                  }`}
-                >
-                  {status?.ollama_connected ? 'Local LLaMA Active' : 'Heuristic Engine Active'}
-                </span>
-              </h3>
-              <p className="text-xs text-[#6B7280]">
-                Grounded in active orders, CNT simulations, and inventory positions
-              </p>
-            </div>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-[#F3F4F6] transition-colors cursor-pointer"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-[#F3F4F6] transition-colors cursor-pointer"
-          >
-            <X className="h-5 w-5" />
-          </button>
         </div>
 
         {/* Message Thread */}
@@ -135,46 +202,18 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({ isOpen, onCl
               >
                 <div className="whitespace-pre-line">{m.text}</div>
 
-                {/* Model badge & Context Accordion */}
-                {m.sender === 'assistant' && (
-                  <div className="mt-3 pt-2 border-t border-[#F3F4F6] flex flex-col gap-2">
-                    <div className="flex items-center justify-between text-[10px] text-[#6B7280]">
-                      <span>Model: {m.modelUsed || 'Heuristic Fallback'}</span>
-                      {m.contextRetrieved && (
-                        <button
-                          onClick={() =>
-                            setExpandedContextIndex(expandedContextIndex === idx ? null : idx)
-                          }
-                          className="flex items-center gap-1 text-[#7C3AED] hover:underline font-bold cursor-pointer"
-                        >
-                          {expandedContextIndex === idx ? (
-                            <>Hide Context <ChevronUp className="h-3 w-3" /></>
-                          ) : (
-                            <>Inspect Context <ChevronDown className="h-3 w-3" /></>
-                          )}
-                        </button>
-                      )}
-                    </div>
-
-                    {expandedContextIndex === idx && m.contextRetrieved && (
-                      <pre className="p-2.5 rounded-xl bg-[#F5F7FB] border border-[#E5E7EB] text-[10px] text-[#374151] overflow-x-auto max-h-36 font-mono">
-                        {JSON.stringify(m.contextRetrieved, null, 2)}
-                      </pre>
-                    )}
-
-                    {m.suggestedActions && m.suggestedActions.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mt-1">
-                        {m.suggestedActions.map((act, actIdx) => (
-                          <button
-                            key={actIdx}
-                            onClick={() => handleSend(act)}
-                            className="px-2.5 py-1 rounded-lg bg-[#F3E8FF] hover:bg-[#EDE9FE] text-[11px] text-[#7C3AED] border border-[#E9D5FF] transition-colors font-bold shadow-2xs cursor-pointer"
-                          >
-                            {act}
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                {/* Suggested Action Prompts */}
+                {m.sender === 'assistant' && m.suggestedActions && m.suggestedActions.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-3 pt-2 border-t border-[#F3F4F6]">
+                    {m.suggestedActions.map((act, actIdx) => (
+                      <button
+                        key={actIdx}
+                        onClick={() => handleSend(act)}
+                        className="px-2.5 py-1 rounded-lg bg-[#F3E8FF] hover:bg-[#EDE9FE] text-[11px] text-[#7C3AED] border border-[#E9D5FF] transition-colors font-bold shadow-2xs cursor-pointer text-left"
+                      >
+                        {act}
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
@@ -191,7 +230,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({ isOpen, onCl
               <div className="h-8 w-8 rounded-lg bg-[#F3E8FF] border border-[#E9D5FF] flex items-center justify-center text-[#7C3AED] animate-pulse">
                 <Bot className="h-4 w-4" />
               </div>
-              <span className="animate-pulse">Retrieving supply chain context and formulating response...</span>
+              <span className="animate-pulse">Checking records and preparing response...</span>
             </div>
           )}
         </div>
@@ -204,7 +243,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({ isOpen, onCl
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Ask about inventory shortages, CNT recommendations, or supplier scores..."
+              placeholder="Ask AI Assistant anything..."
               className="flex-1 bg-[#F5F7FB] border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-xs text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#7C3AED] transition"
             />
             <button

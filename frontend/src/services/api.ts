@@ -186,7 +186,7 @@ export const api = {
         session_id: sessionId,
         offered_price: Number(offeredPrice),
         offered_lead_days: Number(offeredLeadDays),
-        message,
+        message: message || '',
       }),
     });
     if (!res.ok) {
@@ -361,12 +361,61 @@ export const api = {
     return res.json();
   },
 
-  async queryAssistant(prompt: string, role = 'ADMIN', orderId?: number): Promise<any> {
+  async queryAssistant(prompt: string, role = 'ADMIN', orderId?: number, history?: any[]): Promise<any> {
     const res = await fetch(`${API_BASE}/assistant/query`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, role, order_id: orderId }),
+      body: JSON.stringify({ prompt, role, order_id: orderId, history }),
     });
     return res.json();
   },
+
+  // User and Role Management (Admin)
+  async getUsers(): Promise<User[]> {
+    const res = await fetch(`${API_BASE}/users/`);
+    if (!res.ok) throw new Error('Failed to fetch users');
+    return res.json();
+  },
+
+  async updateUserStatus(userId: number, isActive: boolean): Promise<User> {
+    const res = await fetch(`${API_BASE}/users/${userId}/status`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_active: isActive }),
+    });
+    if (!res.ok) throw new Error('Failed to update status');
+    return res.json();
+  },
+
+  async updateUserRole(userId: number, role: string): Promise<User> {
+    const res = await fetch(`${API_BASE}/users/${userId}/role`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role }),
+    });
+    if (!res.ok) throw new Error('Failed to update role');
+    return res.json();
+  },
+
+  async getAuditLogs(limit = 50): Promise<any[]> {
+    const res = await fetch(`${API_BASE}/users/audit-logs?limit=${limit}`);
+    if (!res.ok) return [];
+    return res.json();
+  },
+
+  // Decision & Purchase Approvals (Admin)
+  async getPendingApprovals(): Promise<any[]> {
+    const res = await fetch(`${API_BASE}/purchase-orders/pending-approvals`);
+    if (!res.ok) return [];
+    return res.json();
+  },
+
+  async rejectApproval(orderId: number, reason: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/purchase-orders/${orderId}/reject?reason=${encodeURIComponent(reason)}`, {
+      method: 'POST',
+    });
+    if (!res.ok) throw new Error('Failed to reject approval');
+    return res.json();
+  },
 };
+

@@ -33,20 +33,30 @@ export const NegotiationPage: React.FC<NegotiationPageProps> = ({
   const [customMsg, setCustomMsg] = useState('');
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const fetchSessions = async () => {
+  const messagesEndRef = React.useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const fetchSessions = async (targetSessionId?: number) => {
     try {
       const data = await api.getNegotiations();
       setSessions(data);
       if (data.length > 0) {
         let match = data[0];
-        if (initialProcId && initialSupplierId) {
+        const desiredId = targetSessionId || activeSession?.id;
+        if (desiredId) {
+          const found = data.find((s) => s.id === desiredId);
+          if (found) match = found;
+        } else if (initialProcId && initialSupplierId) {
           const found = data.find(
             (s) => s.procurement_request_id === initialProcId && s.supplier_id === initialSupplierId
           );
           if (found) match = found;
         }
         setActiveSession(match);
-        setCounterPrice(match.current_buyer_offer || 41.5);
+        setCounterPrice(match.current_buyer_offer || 41.0);
       }
     } catch (err) {
       console.error('Failed to load negotiations:', err);
@@ -58,6 +68,10 @@ export const NegotiationPage: React.FC<NegotiationPageProps> = ({
   useEffect(() => {
     fetchSessions();
   }, [initialProcId, initialSupplierId]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [activeSession?.messages]);
 
   const handleSendCounter = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,13 +95,17 @@ export const NegotiationPage: React.FC<NegotiationPageProps> = ({
         customMsg || undefined
       );
 
+      const msg = res.agreement_reached
+        ? `✓ Agreement reached at ₹${res.final_price || res.current_supplier_offer}/unit in Round ${res.current_round}!`
+        : `Counteroffer submitted! Round ${res.current_round} recorded. Supplier countered with ₹${res.current_supplier_offer}/unit.`;
+
       setFeedback({
         type: 'success',
-        text: `Counteroffer submitted! Round ${res.current_round} recorded. Supplier offer: $${res.current_supplier_offer}`,
+        text: msg,
       });
       setCustomMsg('');
       setActiveSession(res);
-      fetchSessions();
+      setSessions((prev) => prev.map((s) => (s.id === res.id ? res : s)));
     } catch (err: any) {
       setFeedback({
         type: 'error',
@@ -180,7 +198,7 @@ export const NegotiationPage: React.FC<NegotiationPageProps> = ({
                 <div className="text-xs font-medium truncate text-[#111827]">{s.supplier_name}</div>
                 <div className="flex justify-between items-center text-[11px] text-[#6B7280] mt-1.5 pt-1 border-t border-[#F3F4F6]">
                   <span>Round {s.current_round}/{s.max_rounds}</span>
-                  <span className="font-bold text-[#10B981]">${s.current_supplier_offer}/unit</span>
+                  <span className="font-bold text-[#10B981]">₹{s.current_supplier_offer}/unit</span>
                 </div>
               </button>
             ))}
@@ -200,7 +218,7 @@ export const NegotiationPage: React.FC<NegotiationPageProps> = ({
                     <StatusBadge status={activeSession.status} />
                   </div>
                   <p className="text-[11px] text-[#6B7280] mt-0.5">
-                    Target Concession: <span className="text-[#2563EB] font-bold">${activeSession.target_price}</span> • Current Offer: <span className="text-[#10B981] font-bold">${activeSession.current_supplier_offer}</span>
+                    Target Concession: <span className="text-[#2563EB] font-bold">₹{activeSession.target_price}</span> • Current Offer: <span className="text-[#10B981] font-bold">₹{activeSession.current_supplier_offer}</span>
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -232,7 +250,7 @@ export const NegotiationPage: React.FC<NegotiationPageProps> = ({
                         </div>
                         <div className="flex items-baseline justify-between pt-1">
                           <span className="text-base font-extrabold tracking-tight">
-                            ${m.offered_price.toFixed(2)}/unit
+                            ₹{m.offered_price.toFixed(2)}/unit
                           </span>
                           <span className="text-[11px] opacity-90 font-medium">{m.offered_lead_days} days lead</span>
                         </div>
@@ -254,7 +272,21 @@ export const NegotiationPage: React.FC<NegotiationPageProps> = ({
                     </div>
                   );
                 })}
+                <div ref={messagesEndRef} />
               </div>
+
+              {/* Status Notice if Agreed */}
+              {activeSession.status === 'AGREED' && (
+                <div className="px-4 py-2.5 bg-[#ECFDF5] border-t border-[#A7F3D0] flex items-center justify-between text-xs text-[#065F46]">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-[#10B981]" />
+                    <span className="font-bold">
+                      Binding Agreement Concluded at ₹{activeSession.final_price || activeSession.current_supplier_offer}/unit ({activeSession.final_lead_days || 6} days lead).
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-[#047857]">You may still submit another counteroffer to reopen bargaining.</span>
+                </div>
+              )}
 
               {/* Action / Counteroffer Bar */}
               <div className="p-4 border-t border-[#E5E7EB] bg-white space-y-3">
@@ -262,7 +294,7 @@ export const NegotiationPage: React.FC<NegotiationPageProps> = ({
                   <div className="flex flex-col sm:flex-row items-end gap-3">
                     <div className="w-full sm:w-1/3">
                       <label className="block text-[11px] text-[#4B5563] font-semibold mb-1">
-                        Buyer Counter Price ($)
+                        Buyer Counter Price (₹)
                       </label>
                       <input
                         type="number"

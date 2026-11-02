@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 # Auth
 class Token(BaseModel):
@@ -31,8 +31,13 @@ class UserResponse(BaseModel):
     company_name: Optional[str] = None
     is_active: bool
     created_at: datetime
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
+class UserStatusUpdate(BaseModel):
+    is_active: bool
+
+class UserRoleUpdate(BaseModel):
+    role: str
 
 # Products & Inventory
 class ProductResponse(BaseModel):
@@ -45,8 +50,7 @@ class ProductResponse(BaseModel):
     target_selling_price: float
     reorder_level: int
     description: Optional[str] = None
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class InventoryResponse(BaseModel):
     id: int
@@ -61,8 +65,7 @@ class InventoryResponse(BaseModel):
     reorder_level: int
     unit_cost: float
     status: str
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class InventoryStockAdjust(BaseModel):
     product_id: int
@@ -113,8 +116,7 @@ class CustomerOrderResponse(BaseModel):
     customer_explanation: Optional[str] = None
     created_at: datetime
     updated_at: datetime
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # Procurement Requests
 class ProcurementRequestResponse(BaseModel):
@@ -134,8 +136,7 @@ class ProcurementRequestResponse(BaseModel):
     delivery_risk: str
     quotations_count: Optional[int] = 0
     created_at: datetime
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # Suppliers
 class SupplierResponse(BaseModel):
@@ -150,8 +151,7 @@ class SupplierResponse(BaseModel):
     reliability_score: float
     risk_score: float
     is_active: bool
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # Quotations
 class QuotationCreate(BaseModel):
@@ -181,15 +181,14 @@ class QuotationResponse(BaseModel):
     total_score: float
     rank: int
     created_at: datetime
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # Negotiation
 class NegotiationMessageCreate(BaseModel):
     session_id: int
     offered_price: float
     offered_lead_days: int
-    message: str
+    message: Optional[str] = None
 
 class NegotiationMessageResponse(BaseModel):
     id: int
@@ -202,8 +201,7 @@ class NegotiationMessageResponse(BaseModel):
     message: str
     ai_suggestion: Optional[str] = None
     created_at: datetime
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class NegotiationSessionResponse(BaseModel):
     id: int
@@ -223,8 +221,7 @@ class NegotiationSessionResponse(BaseModel):
     decision_mode: str
     messages: List[NegotiationMessageResponse] = []
     created_at: datetime
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # CNT & Simulation
 class ScenarioResult(BaseModel):
@@ -261,16 +258,15 @@ class SimulationRunResponse(BaseModel):
     confidence_score: float
     scenarios: List[ScenarioResult] = []
     created_at: datetime
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class RunSimulationRequest(BaseModel):
     procurement_request_id: int
-    include_delay_scenario: bool = True
-    delay_days: int = 4
-    include_demand_variation: bool = True
-    demand_variation_pct: float = 20.0
-    negotiated_discount_pct: float = 8.0
+    include_delay_scenario: Optional[bool] = True
+    delay_days: Optional[int] = 4
+    include_demand_variation: Optional[bool] = True
+    demand_variation_pct: Optional[float] = 20.0
+    negotiated_discount_pct: Optional[float] = 8.0
 
 # Purchase Orders & Approval
 class ApproveSupplierRequest(BaseModel):
@@ -296,8 +292,7 @@ class PurchaseOrderResponse(BaseModel):
     status: str
     approved_at: datetime
     created_at: datetime
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # Shipments
 class ShipmentResponse(BaseModel):
@@ -313,8 +308,7 @@ class ShipmentResponse(BaseModel):
     estimated_arrival: datetime
     actual_arrival: Optional[datetime] = None
     created_at: datetime
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ShipmentUpdateStatus(BaseModel):
     status: str
@@ -335,8 +329,7 @@ class AgentTaskResponse(BaseModel):
     requires_approval: bool
     created_at: datetime
     completed_at: Optional[datetime] = None
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class AgentLogResponse(BaseModel):
     id: int
@@ -346,8 +339,7 @@ class AgentLogResponse(BaseModel):
     message: str
     details: Optional[Dict[str, Any]] = None
     timestamp: datetime
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # Notifications
 class NotificationResponse(BaseModel):
@@ -359,8 +351,7 @@ class NotificationResponse(BaseModel):
     related_order_id: Optional[int] = None
     is_read: bool
     created_at: datetime
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # Feedback
 class CustomerFeedbackCreate(BaseModel):
@@ -380,14 +371,14 @@ class CustomerFeedbackResponse(BaseModel):
     quality_satisfaction: int
     comments: Optional[str] = None
     created_at: datetime
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # Assistant
 class AssistantQueryRequest(BaseModel):
     prompt: str
     order_id: Optional[int] = None
     role: str = "ADMIN"
+    history: Optional[List[Dict[str, Any]]] = None
 
 class AssistantQueryResponse(BaseModel):
     answer: str

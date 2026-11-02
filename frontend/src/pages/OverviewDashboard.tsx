@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { KPICard } from '../components/KPICard';
 import { DashboardKPIs, CustomerOrder, AgentTask } from '../types';
 import { api } from '../services/api';
+import { formatINR } from '../utils/currency';
 import {
   Package,
   TrendingUp,
@@ -87,50 +88,73 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
     darkNavy: '#111827',
   };
 
-  // 1. Inventory Overview Donut Data
-  const inventoryData = [
-    { name: 'Raw Materials', value: 48.7, color: THEME_COLORS.blue, pct: 32 },
-    { name: 'WIP', value: 26.3, color: THEME_COLORS.green, pct: 17 },
-    { name: 'Finished Goods', value: 57.9, color: THEME_COLORS.purple, pct: 38 },
-    { name: 'MRO / Other', value: 19.7, color: THEME_COLORS.orange, pct: 13 },
+  const paletteCycle = [
+    THEME_COLORS.blue,
+    THEME_COLORS.purple,
+    THEME_COLORS.green,
+    THEME_COLORS.orange,
+    THEME_COLORS.sky,
   ];
+
+  // 1. Inventory Overview Donut Data from real backend database
+  const inventoryData = (kpis?.inventory_categories && kpis.inventory_categories.length > 0)
+    ? kpis.inventory_categories.map((cat, idx) => ({
+        name: cat.name,
+        value: cat.value,
+        color: paletteCycle[idx % paletteCycle.length],
+        pct: cat.pct,
+      }))
+    : [
+        { name: 'Electronics', value: 31635, color: THEME_COLORS.blue, pct: 26 },
+        { name: 'Energy Storage', value: 27750, color: THEME_COLORS.green, pct: 23 },
+        { name: 'Power Supplies', value: 54000, color: THEME_COLORS.purple, pct: 45 },
+        { name: 'Sensors', value: 7600, color: THEME_COLORS.orange, pct: 6 },
+      ];
 
   // 2. Demand Forecast Multi-line Plot
   const forecastData = [
-    { week: 'May 19', historical: 28, forecast: null, high: null, low: null },
-    { week: 'May 26', historical: 33, forecast: null, high: null, low: null },
-    { week: 'Jun 2', historical: 31, forecast: 35, high: 38, low: 30 },
-    { week: 'Jun 9', historical: null, forecast: 38, high: 43, low: 32 },
-    { week: 'Jun 16', historical: null, forecast: 42, high: 48, low: 34 },
-    { week: 'Jun 23', historical: null, forecast: 40, high: 46, low: 31 },
-    { week: 'Jun 30', historical: null, forecast: 45, high: 52, low: 35 },
-    { week: 'Jul 7', historical: null, forecast: 43, high: 50, low: 33 },
-    { week: 'Jul 14', historical: null, forecast: 49, high: 58, low: 36 },
+    { week: 'Wk 1', historical: 28, forecast: null, high: null, low: null },
+    { week: 'Wk 2', historical: 33, forecast: null, high: null, low: null },
+    { week: 'Wk 3', historical: 31, forecast: 35, high: 38, low: 30 },
+    { week: 'Wk 4', historical: null, forecast: 38, high: 43, low: 32 },
+    { week: 'Wk 5', historical: null, forecast: 42, high: 48, low: 34 },
+    { week: 'Wk 6', historical: null, forecast: 40, high: 46, low: 31 },
+    { week: 'Wk 7', historical: null, forecast: 45, high: 52, low: 35 },
+    { week: 'Wk 8', historical: null, forecast: 43, high: 50, low: 33 },
+    { week: 'Wk 9', historical: null, forecast: 49, high: 58, low: 36 },
   ];
 
-  // 3. Delivery Performance Donut Data
+  // 3. Delivery Performance Donut Data from real backend database
+  const onTimeRate = kpis?.on_time_delivery_rate ?? 100.0;
+  const delayedRate = Number(Math.max(0, 100 - onTimeRate).toFixed(1));
   const deliveryData = [
-    { name: 'On-Time', value: 92.1, color: THEME_COLORS.green, pct: '92.1%' },
-    { name: 'Delayed', value: 5.6, color: THEME_COLORS.red, pct: '5.6%' },
-    { name: 'Early', value: 2.3, color: THEME_COLORS.blue, pct: '2.3%' },
+    { name: 'On-Time', value: onTimeRate, color: THEME_COLORS.green, pct: `${onTimeRate}%` },
+    { name: 'Delayed', value: delayedRate, color: THEME_COLORS.red, pct: `${delayedRate}%` },
   ];
 
   // 4. Top Delay Reasons Data
   const delayReasons = [
-    { label: 'Carrier Delays', pct: 32, color: THEME_COLORS.purple },
-    { label: 'Port Congestion', pct: 21, color: THEME_COLORS.blue },
-    { label: 'Customs Clearance', pct: 18, color: THEME_COLORS.sky },
-    { label: 'Weather & Maritime', pct: 12, color: THEME_COLORS.green },
-    { label: 'Other Exceptions', pct: 17, color: THEME_COLORS.gray },
+    { label: 'Carrier Transit Congestion', pct: 32, color: THEME_COLORS.purple },
+    { label: 'Port Customs Processing', pct: 21, color: THEME_COLORS.blue },
+    { label: 'Warehouse Dock Handling', pct: 18, color: THEME_COLORS.sky },
+    { label: 'Severe Weather Variance', pct: 12, color: THEME_COLORS.green },
+    { label: 'Documentation Revision', pct: 17, color: THEME_COLORS.gray },
   ];
 
-  // 5. Cost Breakdown Donut Data
-  const costBreakdownData = [
-    { name: 'Transportation', value: 11.2, color: THEME_COLORS.blue, pct: 39 },
-    { name: 'Inventory Carrying', value: 6.8, color: THEME_COLORS.green, pct: 24 },
-    { name: 'Warehousing', value: 5.6, color: THEME_COLORS.purple, pct: 19 },
-    { name: 'Other Logistics', value: 5.1, color: THEME_COLORS.orange, pct: 18 },
-  ];
+  // 5. Cost Breakdown Donut Data from real backend database
+  const costBreakdownData = (kpis?.cost_breakdown && kpis.cost_breakdown.length > 0)
+    ? kpis.cost_breakdown.map((item, idx) => ({
+        name: item.name,
+        value: item.value,
+        color: paletteCycle[idx % paletteCycle.length],
+        pct: item.pct,
+      }))
+    : [
+        { name: 'Direct Procurement', value: 37125, color: THEME_COLORS.blue, pct: 64 },
+        { name: 'Transportation & Freight', value: 5197, color: THEME_COLORS.green, pct: 9 },
+        { name: 'Inventory Carrying', value: 9678, color: THEME_COLORS.purple, pct: 17 },
+        { name: 'Warehousing & Facilities', value: 6049, color: THEME_COLORS.orange, pct: 10 },
+      ];
 
   const pendingApprovals = orders.filter((o) => o.status === 'AWAITING_APPROVAL');
 
@@ -159,36 +183,25 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
             Dashboard
           </h1>
           <p className="text-xs text-[#6B7280] font-medium mt-0.5">
-            Real-time multi-agent telemetry, counterfactual forecasting, and autonomous fulfillment
+            Track orders, compare suppliers, monitor deliveries, and make better purchasing decisions
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Search Box */}
-          <div className="relative min-w-[240px]">
-            <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-[#9CA3AF]" />
-            <input
-              type="text"
-              placeholder="Search anything... ⌘ K"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#F5F7FB] border border-[#E5E7EB] rounded-xl pl-9 pr-12 py-2 text-xs text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#2563EB] transition"
-            />
-            <span className="absolute right-2.5 top-2 px-1.5 py-0.5 rounded text-[10px] font-mono text-[#9CA3AF] bg-white border border-[#E5E7EB]">
-              ⌘K
-            </span>
-          </div>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            onClick={() => onNavigate('orders')}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-[#E5E7EB] hover:border-[#2563EB] text-xs font-semibold text-[#374151] hover:text-[#2563EB] transition shadow-2xs cursor-pointer"
+          >
+            <ShoppingCart className="h-4 w-4 text-[#2563EB]" />
+            <span>Customer Demand</span>
+          </button>
 
-          {/* Date Range Picker */}
-          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-[#E5E7EB] hover:border-[#2563EB] text-xs font-semibold text-[#374151] transition shadow-2xs cursor-pointer">
-            <Calendar className="h-4 w-4 text-[#2563EB]" />
-            <span>May 12 – May 19, 2026</span>
-          </div>
-
-          {/* Filter Button */}
-          <button className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-[#E5E7EB] hover:border-[#2563EB] text-xs font-semibold text-[#374151] transition shadow-2xs cursor-pointer">
-            <Filter className="h-4 w-4 text-[#6B7280]" />
-            <span>Filters</span>
+          <button
+            onClick={() => onNavigate('cnt')}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+          >
+            <Cpu className="h-4 w-4" />
+            <span>Compare Supplier Options</span>
           </button>
         </div>
       </div>
@@ -202,18 +215,18 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
             </div>
             <div>
               <h4 className="text-xs font-bold text-orange-950">
-                Action Required: {pendingApprovals.length} Order(s) Awaiting Decision Approval
+                Action Required: {pendingApprovals.length} order(s) waiting for approval
               </h4>
               <p className="text-[11px] text-orange-900/80">
-                The Counterfactual Negotiation Twin has simulated alternative suppliers. Approval is needed to issue Purchase Orders.
+                We have compared alternative suppliers for {pendingApprovals.length} order(s). Please review and approve the recommended option before the purchase order is created.
               </p>
             </div>
           </div>
           <button
-            onClick={() => onNavigate('cnt')}
+            onClick={() => onNavigate('approvals')}
             className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold transition shadow-xs cursor-pointer"
           >
-            Review in CNT <ArrowRight className="h-3.5 w-3.5" />
+            Review Approvals <ArrowRight className="h-3.5 w-3.5" />
           </button>
         </div>
       )}
@@ -223,42 +236,42 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
       {/* ============================================================ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
-          title="Total Inventory"
-          value="$152.6M"
-          trend="8.4%"
+          title="Total Stock Value"
+          value={formatINR(kpis?.total_inventory_valuation ?? 0, { compact: true })}
+          trend={`${kpis?.total_inventory_units?.toLocaleString() ?? 0} units`}
           trendPositive={true}
           accentColor="blue"
-          subtitle="vs May 5 – May 11"
+          subtitle="Real-time stock valuation"
           icon={<Package className="h-5 w-5" />}
           sparklinePoints={[24, 28, 22, 35, 30, 42, 38, 48, 45, 54]}
         />
         <KPICard
-          title="Demand (Forecast)"
-          value="$189.3M"
-          trend="12.7%"
+          title="Demand (Orders)"
+          value={formatINR(kpis?.total_demand_value ?? 0, { compact: true })}
+          trend={`${kpis?.total_orders ?? 0} orders`}
           trendPositive={true}
           accentColor="green"
-          subtitle="vs May 5 – May 11"
+          subtitle={`${kpis?.pending_orders ?? 0} active in pipeline`}
           icon={<TrendingUp className="h-5 w-5" />}
           sparklinePoints={[30, 32, 28, 40, 35, 45, 42, 50, 48, 62]}
         />
         <KPICard
-          title="On-Time Delivery"
-          value="92.1%"
-          trend="3.4pp"
-          trendPositive={false}
+          title="On-Time Deliveries"
+          value={`${kpis?.on_time_delivery_rate ?? 100}%`}
+          trend={`${kpis?.completed_orders ?? 0} fulfilled`}
+          trendPositive={(kpis?.on_time_delivery_rate ?? 100) >= 90}
           accentColor="red"
-          subtitle="vs May 5 – May 11"
+          subtitle="Orders delivered on time"
           icon={<Clock className="h-5 w-5" />}
           sparklinePoints={[55, 52, 48, 50, 47, 44, 46, 42, 40, 38]}
         />
         <KPICard
-          title="Total Supply Chain Cost"
-          value="$28.7M"
-          trend="4.6%"
+          title="Total Purchasing Cost"
+          value={formatINR(kpis?.total_procurement_spend ?? 0, { compact: true })}
+          trend={`${kpis?.total_pos ?? 0} POs issued`}
           trendPositive={true}
           accentColor="purple"
-          subtitle="vs May 5 – May 11"
+          subtitle={`${kpis?.active_suppliers ?? 0} active suppliers`}
           icon={<DollarSign className="h-5 w-5" />}
           sparklinePoints={[45, 42, 44, 38, 40, 35, 32, 34, 30, 28]}
         />
@@ -284,7 +297,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Tooltip
-                      formatter={(val: any) => [`$${val}M`, 'Value']}
+                      formatter={(val: any) => [formatINR(val, { compact: true }), 'Valuation']}
                       contentStyle={{
                         backgroundColor: '#ffffff',
                         border: '1px solid #E5E7EB',
@@ -311,9 +324,9 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
                 {/* Center text in donut */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                   <span className="text-sm font-extrabold text-[#111827] leading-tight">
-                    $152.6M
+                    {formatINR(kpis?.total_inventory_valuation ?? 0, { compact: true })}
                   </span>
-                  <span className="text-[10px] text-[#9CA3AF] font-semibold">Total</span>
+                  <span className="text-[10px] text-[#9CA3AF] font-semibold">Total Stock</span>
                 </div>
               </div>
 
@@ -331,7 +344,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-[#111827] text-[11px]">${item.value}M</span>
+                      <span className="font-bold text-[#111827] text-[11px]">{formatINR(item.value, { compact: true })}</span>
                       <span className="text-[#9CA3AF] text-[10px] w-6 text-right">{item.pct}%</span>
                     </div>
                   </div>
@@ -341,7 +354,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
           </div>
 
           <div className="mt-4 pt-3 border-t border-[#F3F4F6] flex items-center justify-between text-[11px] text-[#9CA3AF]">
-            <span>vs May 5 – May 11</span>
+            <span>Live warehouse telemetry</span>
             <button
               onClick={() => onNavigate('inventory')}
               className="text-[#2563EB] font-bold hover:underline cursor-pointer flex items-center gap-1"
@@ -357,14 +370,14 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
             <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
               <div>
                 <h3 className="text-sm font-bold text-[#111827] tracking-tight">
-                  Demand Forecast (Next 8 Weeks)
+                  Expected Future Demand (Next 8 Weeks)
                 </h3>
-                <p className="text-[11px] text-[#9CA3AF]">Monte Carlo multi-scenario projection</p>
+                <p className="text-[11px] text-[#9CA3AF]">Expected demand over the next 8 weeks</p>
               </div>
 
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-1 rounded-lg bg-[#F5F7FB] border border-[#E5E7EB] text-[11px] font-semibold text-[#374151]">
-                  Forecast ▾
+                  Scenarios ▾
                 </span>
                 <select
                   value={forecastScenario}
@@ -393,7 +406,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
                     tick={{ fontSize: 10, fill: '#94a3b8' }}
                     axisLine={false}
                     tickLine={false}
-                    tickFormatter={(v) => `$${v}M`}
+                    tickFormatter={(v) => `₹${v} Cr`}
                   />
                   <Tooltip
                     contentStyle={{
@@ -402,13 +415,13 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
                       borderRadius: '10px',
                       fontSize: '11px',
                     }}
-                    formatter={(val: any) => [`$${val}M`, '']}
+                    formatter={(val: any) => [`₹${val} Cr`, '']}
                   />
                   {/* Historical: Solid Blue */}
                   <Line
                     type="monotone"
                     dataKey="historical"
-                    name="Historical"
+                    name="Past results"
                     stroke={THEME_COLORS.blue}
                     strokeWidth={2.5}
                     dot={{ r: 3, fill: THEME_COLORS.blue }}
@@ -417,7 +430,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
                   <Line
                     type="monotone"
                     dataKey="forecast"
-                    name="Forecast"
+                    name="Expected results"
                     stroke={THEME_COLORS.purple}
                     strokeWidth={2}
                     strokeDasharray="4 4"
@@ -427,7 +440,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
                   <Line
                     type="monotone"
                     dataKey="high"
-                    name="High Scenario"
+                    name="Higher-demand possibility"
                     stroke={THEME_COLORS.green}
                     strokeWidth={1.5}
                     strokeDasharray="3 3"
@@ -437,7 +450,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
                   <Line
                     type="monotone"
                     dataKey="low"
-                    name="Low Scenario"
+                    name="Lower-demand possibility"
                     stroke={THEME_COLORS.red}
                     strokeWidth={1.5}
                     strokeDasharray="3 3"
@@ -450,16 +463,16 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
             {/* Chart Legend */}
             <div className="flex flex-wrap items-center justify-center gap-4 mt-2 text-[10px] text-[#6B7280] font-semibold">
               <span className="flex items-center gap-1.5">
-                <span className="w-3 h-0.5 bg-[#2563EB]"></span> Historical
+                <span className="w-3 h-0.5 bg-[#2563EB]"></span> Past results
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="w-3 h-0.5 border-t-2 border-dashed border-[#7C3AED]"></span> Forecast
+                <span className="w-3 h-0.5 border-t-2 border-dashed border-[#7C3AED]"></span> Expected results
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="w-3 h-0.5 border-t-2 border-dashed border-[#10B981]"></span> High Scenario
+                <span className="w-3 h-0.5 border-t-2 border-dashed border-[#10B981]"></span> Higher-demand possibility
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="w-3 h-0.5 border-t-2 border-dashed border-[#EF4444]"></span> Low Scenario
+                <span className="w-3 h-0.5 border-t-2 border-dashed border-[#EF4444]"></span> Lower-demand possibility
               </span>
             </div>
           </div>
@@ -507,7 +520,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                   <span className="text-base font-extrabold text-[#111827] leading-tight">
-                    92.1%
+                    {kpis?.on_time_delivery_rate ?? 100}%
                   </span>
                   <span className="text-[10px] text-[#9CA3AF] font-semibold">On-Time</span>
                 </div>
@@ -532,7 +545,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
           </div>
 
           <div className="mt-2 pt-3 border-t border-[#F3F4F6] flex items-center justify-between text-[11px] text-[#9CA3AF]">
-            <span>vs May 5 – May 11</span>
+            <span>Real-time delivery SLA</span>
             <button
               onClick={() => onNavigate('orders')}
               className="text-[#2563EB] font-bold hover:underline cursor-pointer flex items-center gap-1"
@@ -552,10 +565,10 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
           <div>
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-bold text-[#111827] tracking-tight">
-                Logistics Snapshot
+                Delivery Status
               </h3>
               <span className="text-[11px] text-[#10B981] font-bold bg-[#ECFDF5] px-2 py-0.5 rounded-md">
-                Active Telemetry
+                Live shipment updates
               </span>
             </div>
 
@@ -563,23 +576,33 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
             <div className="grid grid-cols-4 gap-2 mb-4">
               <div className="p-2.5 rounded-xl bg-[#EFF6FF] border border-[#DBEAFE] text-center">
                 <p className="text-[10px] text-[#2563EB] font-semibold uppercase">In Transit</p>
-                <p className="text-sm font-extrabold text-[#111827] mt-0.5">1,247</p>
+                <p className="text-sm font-extrabold text-[#111827] mt-0.5">
+                  {kpis?.shipments_telemetry?.in_transit ?? 0}
+                </p>
                 <p className="text-[9px] text-[#6B7280]">Shipments</p>
               </div>
               <div className="p-2.5 rounded-xl bg-[#ECFDF5] border border-[#A7F3D0] text-center">
-                <p className="text-[10px] text-[#10B981] font-semibold uppercase">On-Time</p>
-                <p className="text-sm font-extrabold text-[#10B981] mt-0.5">1,148</p>
-                <p className="text-[9px] text-[#059669]">92.1%</p>
+                <p className="text-[10px] text-[#10B981] font-semibold uppercase">Delivered</p>
+                <p className="text-sm font-extrabold text-[#10B981] mt-0.5">
+                  {kpis?.shipments_telemetry?.delivered ?? (kpis?.completed_orders ?? 0)}
+                </p>
+                <p className="text-[9px] text-[#059669]">{kpis?.on_time_delivery_rate ?? 100}%</p>
               </div>
               <div className="p-2.5 rounded-xl bg-[#FEF2F2] border border-[#FECACA] text-center">
                 <p className="text-[10px] text-[#EF4444] font-semibold uppercase">Delayed</p>
-                <p className="text-sm font-extrabold text-[#EF4444] mt-0.5">76</p>
-                <p className="text-[9px] text-[#DC2626]">6.1%</p>
+                <p className="text-sm font-extrabold text-[#EF4444] mt-0.5">
+                  {kpis?.shipments_telemetry?.delayed ?? 0}
+                </p>
+                <p className="text-[9px] text-[#DC2626]">
+                  {kpis?.shipments_telemetry?.total ? `${((kpis.shipments_telemetry.delayed / Math.max(kpis.shipments_telemetry.total, 1)) * 100).toFixed(1)}%` : '0%'}
+                </p>
               </div>
               <div className="p-2.5 rounded-xl bg-[#FFF7ED] border border-[#FED7AA] text-center">
-                <p className="text-[10px] text-[#F59E0B] font-semibold uppercase">At Risk</p>
-                <p className="text-sm font-extrabold text-[#F59E0B] mt-0.5">23</p>
-                <p className="text-[9px] text-[#D97706]">1.8%</p>
+                <p className="text-[10px] text-[#F59E0B] font-semibold uppercase">Needs attention</p>
+                <p className="text-sm font-extrabold text-[#F59E0B] mt-0.5">
+                  {kpis?.shipments_telemetry?.at_risk ?? (kpis?.shortage_items ?? 0)}
+                </p>
+                <p className="text-[9px] text-[#D97706]">Items to monitor</p>
               </div>
             </div>
 
@@ -699,7 +722,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
           <div>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-bold text-[#111827] tracking-tight">
-                Cost Breakdown
+                Where the money is spent
               </h3>
               <span className="text-[#10B981] font-bold text-xs">↓ 4.6%</span>
             </div>
@@ -709,7 +732,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Tooltip
-                      formatter={(val: any) => [`$${val}M`, 'Cost']}
+                      formatter={(val: any) => [formatINR(val, { compact: true }), 'Cost']}
                       contentStyle={{
                         backgroundColor: '#ffffff',
                         border: '1px solid #E5E7EB',
@@ -734,9 +757,9 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                   <span className="text-sm font-extrabold text-[#111827] leading-tight">
-                    $28.7M
+                    {formatINR(kpis?.total_supply_chain_cost ?? kpis?.total_procurement_spend ?? 0, { compact: true })}
                   </span>
-                  <span className="text-[9px] text-[#9CA3AF] font-semibold">Total</span>
+                  <span className="text-[9px] text-[#9CA3AF] font-semibold">Total Spend</span>
                 </div>
               </div>
 
@@ -754,7 +777,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5 font-bold text-[11px]">
-                      <span className="text-[#111827]">${item.value}M</span>
+                      <span className="text-[#111827]">{formatINR(item.value, { compact: true })}</span>
                       <span className="text-[#9CA3AF] text-[10px]">({item.pct}%)</span>
                     </div>
                   </div>
@@ -764,7 +787,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
           </div>
 
           <div className="mt-2 pt-3 border-t border-[#F3F4F6] flex items-center justify-between text-[11px] text-[#9CA3AF]">
-            <span>vs May 5 – May 11</span>
+            <span>Live procurement cycle</span>
             <button
               onClick={() => onNavigate('reports')}
               className="text-[#2563EB] font-bold hover:underline cursor-pointer flex items-center gap-1"
@@ -816,7 +839,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
                     <p className="text-[11px] text-[#4B5563] mt-0.5">
                       PO #PO-88421 is delayed by 4 days due to port congestion.
                     </p>
-                    <p className="text-[10px] text-[#9CA3AF] mt-1 font-mono">May 19, 2026 · 10:24 AM</p>
+                    <p className="text-[10px] text-[#9CA3AF] mt-1 font-mono">12 mins ago</p>
                   </div>
                 </div>
                 <ChevronRight className="h-4 w-4 text-[#9CA3AF]" />
@@ -843,7 +866,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
                     <p className="text-[11px] text-[#4B5563] mt-0.5">
                       Hydraulic Pump (SKU: HP-7823) at Dallas DC at critical buffer level.
                     </p>
-                    <p className="text-[10px] text-[#9CA3AF] mt-1 font-mono">May 19, 2026 · 09:15 AM</p>
+                    <p className="text-[10px] text-[#9CA3AF] mt-1 font-mono">45 mins ago</p>
                   </div>
                 </div>
                 <ChevronRight className="h-4 w-4 text-[#9CA3AF]" />
@@ -870,7 +893,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
                     <p className="text-[11px] text-[#4B5563] mt-0.5">
                       On-time delivery dropped below 85% for secondary vendor.
                     </p>
-                    <p className="text-[10px] text-[#9CA3AF] mt-1 font-mono">May 19, 2026 · 08:15 AM</p>
+                    <p className="text-[10px] text-[#9CA3AF] mt-1 font-mono">2 hrs ago</p>
                   </div>
                 </div>
                 <ChevronRight className="h-4 w-4 text-[#9CA3AF]" />
@@ -895,7 +918,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
               Route & Supplier Sourcing Opportunity
             </h4>
             <p className="text-xs text-[#4B5563] leading-relaxed">
-              Consolidate shipments from suppliers in Vietnam to reduce transit costs by <strong className="text-[#7C3AED] underline">~$620K</strong> over the next 4 weeks.
+              Consolidate shipments from suppliers to reduce transit costs by <strong className="text-[#7C3AED] underline">~₹62.0 Lakhs</strong> over the next 4 weeks.
             </p>
           </div>
 
@@ -994,53 +1017,6 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
         </div>
       </div>
 
-      {/* ============================================================ */}
-      {/* 6. CONSOLIDATED 7-MODULE ENTERPRISE LAUNCHPAD                 */}
-      {/* ============================================================ */}
-      <div className="rounded-2xl p-5 border border-[#E5E7EB] bg-white shadow-xs">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="text-sm font-bold text-[#111827] tracking-tight">
-              Enterprise 7-Module Operational Launchpad
-            </h3>
-            <p className="text-xs text-[#6B7280]">
-              Direct access to all 7 unified supply chain operations
-            </p>
-          </div>
-          <span className="text-[11px] font-bold text-[#2563EB] bg-[#EFF6FF] px-2.5 py-1 rounded-lg border border-[#DBEAFE]">
-            Unified Architecture
-          </span>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-          {[
-            { id: 'overview', label: '1. Overview', icon: Boxes, desc: 'Real-time KPIs' },
-            { id: 'orders', label: '2. Orders', icon: ShoppingCart, desc: 'Customer Demand' },
-            { id: 'inventory', label: '3. Inventory', icon: Package, desc: 'Stock & Shortage' },
-            { id: 'procurement', label: '4. Procurement', icon: Layers, desc: 'RFQs & Quotes' },
-            { id: 'cnt', label: '5. CNT Twin', icon: Cpu, desc: 'Monte Carlo Sim' },
-            { id: 'suppliers', label: '6. Suppliers', icon: Users, desc: 'Negotiation Hub' },
-            { id: 'reports', label: '7. Reports', icon: BarChart3, desc: 'Role Analytics' },
-          ].map((mod) => {
-            const ModIcon = mod.icon;
-            return (
-              <button
-                key={mod.id}
-                onClick={() => onNavigate(mod.id)}
-                className="p-3 rounded-xl border border-[#E5E7EB] hover:border-[#2563EB] hover:bg-[#EFF6FF]/60 text-left transition group cursor-pointer"
-              >
-                <div className="p-2 rounded-lg bg-[#EFF6FF] group-hover:bg-[#2563EB] group-hover:text-white text-[#2563EB] w-fit transition mb-2">
-                  <ModIcon className="h-4 w-4" />
-                </div>
-                <div className="text-xs font-bold text-[#111827] group-hover:text-[#2563EB] transition">
-                  {mod.label}
-                </div>
-                <div className="text-[10px] text-[#9CA3AF] mt-0.5">{mod.desc}</div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
     </div>
   );
 };

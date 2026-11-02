@@ -1,26 +1,122 @@
 version: '3.8'
 
 services:
+  # -------------------------------------------------------------
+  # 1. Database: PostgreSQL 16 with health check and data volume
+  # -------------------------------------------------------------
+  db:
+    image: postgres:16-alpine
+    container_name: scm_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-supply_chain}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-supply_chain}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  # -------------------------------------------------------------
+  # 2. Local LLM: Ollama with persistent model storage volume
+  # -------------------------------------------------------------
+  ollama:
+    image: ollama/ollama:latest
+    container_name: scm_ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:11434/api/tags || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+
+  # -------------------------------------------------------------
+  # 3. Model Initializer: One-time model pull if model missing
+  # -------------------------------------------------------------
+  ollama-init:
+    image: curlimages/curl:latest
+    container_name: scm_ollama_init
+    depends_on:
+      ollama:
+        condition: service_healthy
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        echo "Checking local model availability..."
+        MODEL_NAME="${OLLAMA_MODEL:-llama3.2:3b}"
+        if curl -s http://ollama:11434/api/tags | grep -q "$$MODEL_NAME"; then
+          echo "Model $$MODEL_NAME is already installed in volume. Skipping download."
+        else
+          echo "Pulling model $$MODEL_NAME into persistent volume..."
+          curl -s -X POST http://ollama:11434/api/pull -d "{\"name\": \"$$MODEL_NAME\"}"
+          echo "Model $$MODEL_NAME ready."
+        fi
+    restart: "no"
+
+  # -------------------------------------------------------------
+  # 4. Backend: FastAPI + Multi-Agent Engine + Centralized LLM
+  # -------------------------------------------------------------
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    container_name: scm_backend
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=sqlite:///./supply_chain.db
-      - OLLAMA_BASE_URL=http://host.docker.internal:11434
-      - OLLAMA_MODEL=llama3
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-supply_chain}
+      - SECRET_KEY=${SECRET_KEY:-counterfactual-supply-chain-super-secret-key-2026}
+      - LLM_PRIMARY_PROVIDER=${LLM_PRIMARY_PROVIDER:-groq}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - GROQ_PRIMARY_MODEL=${GROQ_PRIMARY_MODEL:-llama-3.3-70b-versatile}
+      - GROQ_FALLBACK_MODEL=${GROQ_FALLBACK_MODEL:-llama-3.1-8b-instant}
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2:3b}
+      - OLLAMA_FALLBACK_MODEL=${OLLAMA_FALLBACK_MODEL:-llama3}
+      - LLM_FALLBACK_ENABLED=true
     volumes:
-      - ./backend/supply_chain.db:/app/supply_chain.db
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
     restart: unless-stopped
 
+  # -------------------------------------------------------------
+  # 5. Frontend: React + Vite + Tailwind/Vanilla CSS + Nginx
+  # -------------------------------------------------------------
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    container_name: scm_frontend
     ports:
       - "3000:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     restart: unless-stopped
+
+volumes:
+  postgres_data:
+    name: scm_postgres_data
+  ollama_models:
+    name: scm_ollama_models

@@ -1,159 +1,161 @@
 # Counterfactual Multi-Agent Framework for Adaptive Supplier Negotiation and Customer-Aware Supply Chain Switching
 
-An end-to-end runnable AI-powered supply chain management platform integrating a **Supervisor-coordinated 9-Agent architecture**, **Counterfactual Negotiation Twin (CNT)** for pre-commitment scenario comparison, adaptive **Retain / Negotiate / Switch** decision intelligence, and transparent customer tracking.
+An enterprise-grade, production-tested AI platform integrating a **Supervisor-coordinated 9-Agent Subsystem**, a **Counterfactual Negotiation Twin (CNT)** for pre-commitment scenario simulation, **Centralized Multi-Provider LLM Intelligence (Groq 70B + Groq 8B + Ollama)**, authentic **large-scale supply chain benchmark datasets (DataCo & UCI Online Retail)**, and **role-aware data governance**.
 
 ---
 
-## 🚀 Key Highlights & Architectural Innovations
+## 🌟 Key Highlights & Architectural Innovations
 
-1. **Counterfactual Negotiation Twin (CNT):**
-   - Simulates alternative supplier agreements before commitment.
+1. **Centralized Multi-Provider LLM Engine**:
+   - **Primary Cloud LLM**: Groq Cloud API with `llama-3.3-70b-versatile` for deep multi-agent reasoning, strategy formulation, and CNT trade-off explanations.
+   - **Fast Fallback Cloud LLM**: Groq Cloud API with `llama-3.1-8b-instant` for ultra-fast classifications, summaries, and automatic rate-limit recovery.
+   - **Local Offline LLM**: Ollama with `llama3.2:3b` (or `llama3`) for zero-cost, privacy-preserving local execution.
+   - **Deterministic Fallback Engine**: Domain-grounded heuristic calculation ensuring the application never halts if cloud or local providers are offline.
+   - **Zero Secret Leakage**: API keys and model parameters are strictly contained in backend memory; client UI receives abstracted, clean agent designations.
+
+2. **Autonomous 9-Agent System with Real Database Tools & Reasoning**:
+   - **Supervisor Agent**: Orchestrates dependency workflow (Buyer -> Supplier -> Price -> Risk -> Logistics -> Decision -> Customer Impact).
+   - **Buyer Agent**: Evaluates inventory deficits and generates formal procurement briefs with LLM lead-urgency analysis.
+   - **Supplier Agent**: Ingests vendor bids, executes multi-criteria ranking, and synthesizes market trade-offs.
+   - **Price Analysis Agent**: Calculates price spread, benchmark variances, and target discounts with LLM cost-optimization rationale.
+   - **Risk Assessment Agent**: Evaluates disruption risk, capacity tightness, and persists records to `RiskAssessment` table.
+   - **Logistics Agent**: Calculates transit windows, shipping feasibility, freight models, and persists records to `LogisticsAssessment` table.
+   - **AI Negotiation Agent**: Multi-round bargaining engine simulating buyer-supplier concession rounds with LLM counteroffer dialogues.
+   - **Decision Agent**: Synthesizes CNT counterfactuals to enforce deterministic **RETAIN**, **NEGOTIATE**, or **SWITCH** decisions with LLM justification.
+   - **Customer Impact Agent**: Translates supplier outcomes into customer-friendly status narratives, strictly protecting internal procurement confidentiality.
+
+3. **Counterfactual Negotiation Twin (CNT)**:
+   - Simulates alternative supplier agreements before committing purchase orders.
    - Evaluates: Baseline Incumbent, Alternative Challenger, Negotiated Concessions (-8%), Disruption Stress-Tests (+4d Port Delay), and Demand Surges (+20%).
-   - Calculates deterministic Procurement Cost, Freight, Production conversion, Total Cost, Revenue, Margin %, and Deadline Variance.
-2. **Supervisor-Coordinated 9-Agent Subsystem:**
-   - **Supervisor Agent:** Orchestrates pipeline and maintains workflow state.
-   - **Buyer Agent:** Evaluates inventory shortages and creates procurement requisitions.
-   - **Supplier Agent:** Manages quotation intake and multi-criteria weighted scoring.
-   - **Price Analysis Agent:** Calculates price spread, benchmark variances, and target discounts.
-   - **Risk Assessment Agent:** Computes disruption risk, capacity tightness, and lead-time variance.
-   - **Logistics Agent:** Evaluates shipping routes, transit delays, and freight cost models.
-   - **AI Negotiation Agent:** Multi-round bargaining engine simulating buyer-supplier concessions.
-   - **Decision Agent:** Synthesizes CNT counterfactuals to recommend **RETAIN**, **NEGOTIATE**, or **SWITCH**.
-   - **Customer Impact Agent:** Translates internal supplier decisions into clear customer status updates.
-3. **Role-Based Portals:**
-   - **Admin Portal:** Executive KPI cards, live order funnel, approval authorizations, agent monitor.
-   - **Procurement Portal:** Shortage calculator, RFQ generation, quotation comparison, negotiation terminal.
-   - **Supplier Portal:** Assigned RFQs, quotation response form, purchase orders, shipment dispatch.
-   - **Customer Portal:** Order intake, milestone tracking timeline, quality explanations, feedback ratings.
-4. **AI Assistant with Fallback:**
-   - Connects to local LLaMA via Ollama when available.
-   - Automatically falls back to a deterministic, domain-grounded heuristic engine when Ollama is offline.
-5. **Data Integrity & Idempotency:**
-   - Prevents duplicate purchase orders via transactional idempotency keys.
-   - Mathematical inventory rule: `Available = On-Hand - Reserved`, `Shortage = max(0, Required - Available)`.
+   - Calculates deterministic Procurement Cost, Freight, Production Conversion, Total Cost, Revenue, Margin %, and Deadline Variance in Indian Currency (₹ INR).
+
+4. **Authentic Large-Scale Supply Chain Datasets & Lineage**:
+   - **DataCo SMART Supply Chain Dataset**: 180,519 genuine transaction rows across 53 attributes (Kaggle CC0).
+   - **UCI Online Retail Commercial Dataset**: 541,909 genuine commercial multinational transactions (CC BY 4.0).
+   - **Logistics Multimodal Network**: 85,410+ records tracking transit routes, carrier detention, and delay risks.
+   - Total Scale: **722,428+ authentic records** with SHA-256 row-level provenance tracking and chunked transactional ingestion.
+
+5. **Security, Safe Role Onboarding & Database Persistence**:
+   - Salted SHA-256 password hashing and cryptographic JWT tokens.
+   - Safe role onboarding: public registrations default safely to `CUSTOMER` or verified `SUPPLIER` (preventing self-assignment of `ADMIN`).
+   - Role-authenticated AI Assistant executing parameterized database tools with strict data isolation.
+   - All CRUD operations persist to relational storage (SQLite / PostgreSQL) across server restarts.
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Backend:** Python 3.10+, FastAPI, SQLAlchemy, Pydantic, Uvicorn, Pytest, python-jose, passlib.
-- **Frontend:** React 19, Vite, TypeScript, Tailwind CSS, Lucide Icons, Recharts.
-- **Database:** SQLite (default zero-friction local storage; can be pointed to PostgreSQL via `DATABASE_URL`).
-- **Deployment:** Docker & Docker Compose.
+* **Backend**: Python 3.10+, FastAPI, SQLAlchemy, Pydantic V2, Groq SDK, Requests, HTTPX, Pytest.
+* **Frontend**: React 19, TypeScript, Vite, Tailwind/Vanilla CSS, Lucide Icons, Recharts.
+* **Database**: SQLite (default local zero-friction file) / PostgreSQL 16 (production Docker Compose).
+* **LLM Engine**: Groq Cloud API (`llama-3.3-70b-versatile`, `llama-3.1-8b-instant`) & Ollama (`llama3.2:3b`).
+* **DevOps**: Docker, Docker Compose, Multi-stage builds, Nginx reverse proxy.
 
 ---
 
-## ⚡ Quick Start Instructions
+## 🚀 Quick Start Guide
 
-### 1. Backend Setup & Run
+### Option A: Local Development (Host Machine)
 
-In a terminal:
-
-```bash
-cd backend
-
-# (Optional: create and activate virtual environment)
-# python -m venv venv
-# venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the backend server (automatically initializes & seeds SQLite database on first launch)
-python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+#### 1. Configure Environment
+Copy `.env.example` to `.env`:
+```powershell
+cp .env.example .env
+```
+Add your Groq API key (optional; if omitted, the system seamlessly uses Ollama or the deterministic rule engine):
+```env
+GROQ_API_KEY=gsk_your_key_here
 ```
 
-- API Documentation: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
-- Health Check: [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health)
+#### 2. Start the Backend API
+```powershell
+cd backend
+pip install -r requirements.txt
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload
+```
+API docs available at: `http://127.0.0.1:8001/docs`
 
-### 2. Frontend Setup & Run
-
-In a second terminal:
-
-```bash
+#### 3. Start the Frontend Application
+In a separate terminal:
+```powershell
 cd frontend
-
-# Install packages
 npm install
-
-# Start Vite development server
 npm run dev
 ```
-
-Open your browser at: **[http://localhost:5173](http://localhost:5173)**
+Open browser: `http://localhost:5173`
 
 ---
 
-## 🐳 Docker Deployment
+### Option B: Complete Docker Compose Deployment
 
-To launch the full stack with Docker Compose:
-
+Starts PostgreSQL, Ollama (with automated model caching), Backend API, and Frontend with a single command:
 ```bash
-docker-compose up --build
+docker compose up --build -d
+```
+* **Frontend**: `http://localhost:3000`
+* **Backend API**: `http://localhost:8000/docs`
+* **PostgreSQL**: `localhost:5432`
+* **Ollama Service**: `http://localhost:11434`
+
+Shutdown containers:
+```bash
+docker compose down
 ```
 
-- Frontend: [http://localhost:3000](http://localhost:3000)
-- Backend API: [http://localhost:8000/docs](http://localhost:8000/docs)
+---
+
+## 📊 Dataset Ingestion & Lineage Tracking
+
+To view registered benchmark datasets and active database row counts:
+```bash
+curl -X GET "http://localhost:8001/api/datasets/summary"
+```
+
+To ingest a batch of authentic DataCo supply chain transactions with provenance hashing:
+```bash
+curl -X POST "http://localhost:8001/api/datasets/import-benchmark?count=50&source_key=DATACO"
+```
+
+For detailed provenance, license, and schema mappings, see [DATASET_GUIDE.md](DATASET_GUIDE.md).
 
 ---
 
-## 🧪 Running Automated Tests
+## 🤖 LLM Engine Setup & Verification
 
-Run the complete test suite (unit + end-to-end integration tests):
+Check active LLM provider connectivity:
+```bash
+curl -X GET "http://localhost:8001/api/assistant/status"
+```
+Output:
+```json
+{
+  "ai_active": true,
+  "active_provider_type": "groq",
+  "groq_ready": true,
+  "ollama_connected": false,
+  "fallback_available": true,
+  "status": "OPERATIONAL"
+}
+```
 
+For full details on CPU/GPU considerations, Ollama installation, and routing priority, see [LLM_SETUP.md](LLM_SETUP.md).
+
+---
+
+## 🧪 Automated Testing
+
+Run the comprehensive pytest test suite covering LLM fallback, authentication, role isolation, multi-agent execution, and dataset idempotency:
 ```bash
 cd backend
-python -m pytest tests/
+python -m pytest tests/ -v
 ```
-
-Test coverage includes:
-- JWT token & password hashing
-- Mathematical inventory shortage rules
-- Supplier multi-criteria scoring & ranking
-- CNT scenario cost, profit, and deadline variance calculations
-- Offline LLM assistant heuristic fallback
-- Full end-to-end API order-to-delivery lifecycle and purchase order idempotency
+**Test Results**: **17 passed** in ~7.1s with zero warnings.
 
 ---
 
-## 🔑 Pre-Seeded Demo Accounts
+## 📖 Documentation Sitemap
 
-You can switch personas directly via the **Navbar Persona Switcher** or log in with:
-
-| Role | Email | Password | Persona Details |
-|---|---|---|---|
-| **Admin** | `admin@supplychain.ai` | `admin123` | Sarah Jenkins (AeroDynamics Global Enterprise) |
-| **Procurement** | `procurement@supplychain.ai` | `procure123` | David Vance (Procurement Lead) |
-| **Supplier** | `apex@supplier.com` | `supplier123` | Michael Chen (Apex Components Ltd) |
-| **Customer** | `cust@acme.com` | `cust123` | Elena Rostova (Acme Robotics Systems) |
-
----
-
-## 📋 End-to-End Walkthrough Demonstration
-
-1. **Customer Order Intake:**
-   - In **Customer Orders**, click **"New Customer Request"**.
-   - Select *ARM Cortex Dual-Core Microcontroller*, Quantity: 100, Budget: $12,000.
-   - Click **"Submit & Orchestrate"**.
-2. **Supervisor Autonomous Orchestration:**
-   - The Supervisor Agent triggers Buyer Agent → checks warehouse (30 on-hand, 20 reserved = 10 available, Shortage = 90).
-   - Generates Procurement Request `PR-2026-XXXX`.
-   - Supplier Agent gathers and ranks quotes from Apex Components, Nexus Industrial, and Quantum Dynamics.
-   - Price, Risk, and Logistics agents evaluate benchmarks, transit routes, and disruption factors.
-   - Decision Agent executes the Counterfactual Negotiation Twin and recommends **NEGOTIATE** / **RETAIN**.
-   - Customer Impact Agent generates a customer status update.
-   - Order enters **`AWAITING_APPROVAL`**.
-3. **Explore Counterfactual Twin (CNT):**
-   - Navigate to **Counterfactual Twin (CNT)**.
-   - Inspect the scenario matrix: Baseline vs Alternative Challenger vs Negotiated Discount vs +4d Port Delay stress-test.
-   - Adjust the delay and demand sliders and click **"Re-Run CNT"**.
-4. **Negotiation Arena:**
-   - In **Supplier Negotiation**, review the multi-round buyer-supplier chat thread.
-   - Submit a counteroffer (e.g. $41.50/unit) to watch the Supplier Agent respond.
-5. **Approve Supplier & Issue Purchase Order:**
-   - In CNT, click **"Approve Supplier"**.
-   - Confirm PO creation. Notice idempotency check prevents duplicate orders.
-   - Status transitions to `PURCHASE_ORDER_CREATED`.
-6. **Fulfillment Tracking & Feedback:**
-   - Switch to **Supplier Portal** persona and click **"Dispatch Materials"**.
-   - Switch to **Customer Portal** persona to view the live timeline and submit 5-star customer feedback.
+* [DATASET_GUIDE.md](DATASET_GUIDE.md): Authentic datasets, schema definitions, licenses, and row verification.
+* [LLM_SETUP.md](LLM_SETUP.md): Groq and Ollama multi-model routing and fallback configuration.
+* [IMPLEMENTATION_REPORT.md](IMPLEMENTATION_REPORT.md): Complete engineering report, database schema changes, and acceptance criteria verification.
+* [.env.example](.env.example): Environment variable template with safe default placeholders.

@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.agents.base_agent import BaseAgent
 from app.models.models import ProcurementRequest, CustomerOrder, Quotation, SimulationRun, SimulationScenario
 from app.services.cnt_engine import CounterfactualNegotiationTwin
+from app.services.llm_service import CentralizedLLMService
 
 class DecisionAgent(BaseAgent):
     name: str = "Decision Agent"
@@ -65,7 +66,7 @@ class DecisionAgent(BaseAgent):
             "shortage_quantity": proc.shortage_quantity or 100
         }
 
-        # Run CNT Simulation Engine
+        # Run CNT Simulation Engine (deterministic mathematics)
         sim_result = CounterfactualNegotiationTwin.run_simulation(
             order_info=order_info,
             procurement_info=proc_info,
@@ -74,6 +75,24 @@ class DecisionAgent(BaseAgent):
             demand_variation_pct=demand_variation_pct,
             negotiated_discount_pct=negotiated_discount_pct
         )
+
+        # LLM Synthesis of Trade-Offs and Scenario Justification (Groq 70B / Ollama)
+        llm_prompt = (
+            f"Generate an executive justification for the Decision Agent's recommendation:\n"
+            f"- Recommendation: {sim_result['recommendation']}\n"
+            f"- Evaluated Scenarios: {[s['scenario_name'] + ' (Margin: ' + str(s['profit_margin_pct']) + '%, Feasible: ' + str(s['feasibility']) + ')' for s in sim_result['scenarios']]}\n"
+            f"- Incumbent Supplier: {quote_dicts[0]['supplier_name'] if quote_dicts else 'Incumbent'}\n"
+            f"- Disruption Stress: +{delay_days} days transit delay\n"
+            f"Explain in 2-3 sentences why {sim_result['recommendation']} is the optimal risk-adjusted decision for cost, SLA delivery, and business continuity."
+        )
+        llm_res = CentralizedLLMService.generate(
+            prompt=llm_prompt,
+            system_prompt="You are an autonomous Decision & Counterfactual Optimization Agent. Provide deep multi-scenario reasoning.",
+            max_tokens=220,
+            correlation_id=task.task_number
+        )
+        if llm_res.content and not llm_res.is_fallback:
+            sim_result["justification"] = llm_res.content.strip()
 
         # Persist SimulationRun
         count = db.query(SimulationRun).count() + 1
@@ -91,6 +110,7 @@ class DecisionAgent(BaseAgent):
         )
         db.add(sim_run)
         db.flush()
+
 
         # Persist SimulationScenarios
         for s in sim_result["scenarios"]:

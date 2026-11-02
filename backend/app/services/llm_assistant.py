@@ -1,157 +1,283 @@
-import requests
-from typing import Dict, Any, List
-from app.core.config import settings
+import re
+import json
+from typing import Dict, Any, List, Optional
+from app.services.llm_service import CentralizedLLMService
+from app.services.assistant_tools import AssistantDataTools
 
 class LLMAssistantService:
+    """
+    Intelligent Conversational AI Assistant Engine for Nexora Supply Chain System.
+    Connects to Centralized LLM (Groq LLaMA 3.3 70B -> Groq 8B -> Ollama -> Deterministic Business Fallback),
+    strictly grounded in verified database retrieval and role-scoped permissions.
+    """
+
     @classmethod
-    def is_ollama_available(cls) -> bool:
-        try:
-            resp = requests.get(f"{settings.OLLAMA_BASE_URL}/api/tags", timeout=1.5)
-            return resp.status_code == 200
-        except Exception:
-            return False
+    def get_engine_status(cls) -> Dict[str, Any]:
+        health = CentralizedLLMService.health_check()
+        active = health.get("active_provider", "heuristic_fallback")
+        return {
+            "ai_active": True,
+            "active_provider_type": active,
+            "groq_ready": health.get("groq", {}).get("configured", False),
+            "ollama_connected": health.get("ollama", {}).get("connected", False),
+            "fallback_available": True,
+            "status": "OPERATIONAL"
+        }
 
     @classmethod
     def query_assistant(
         cls,
         prompt: str,
         role: str,
-        context: Dict[str, Any]
+        context: Dict[str, Any],
+        history: Optional[List[Dict[str, Any]]] = None
     ) -> Dict[str, Any]:
         """
-        Queries Ollama if available, otherwise generates a reliable, domain-specific,
-        deterministic heuristic response using operational backend context.
+        Coordinates intent classification, LLM inference, and deterministic business fallbacks.
+        Guarantees zero repetitive generic responses and natural business language.
         """
-        ollama_online = cls.is_ollama_available()
+        p_clean = prompt.strip().lower()
 
-        if ollama_online:
+        # 1. Direct Greeting Recognition (Does NOT trigger fake telemetry)
+        is_greeting = bool(re.match(r"^(hi|hello|hey|good\s*(morning|afternoon|evening)|greetings|howdy|hi\s*there)[!.,\s]*$", p_clean))
+        if is_greeting:
+            greeting_text = (
+                "Hi! I can help you check orders, review supplier quotations, track purchasing tasks, "
+                "and understand supply chain reports. What would you like to know?"
+            )
+            return {
+                "answer": greeting_text,
+                "model_used": "AI Assistant",
+                "is_fallback": False,
+                "context_retrieved": {},
+                "suggested_actions": cls._get_suggested_actions(role, prompt, context)
+            }
+
+        # 2. Check if LLM provider is active (Groq configured or Ollama connected)
+        engine_status = cls.get_engine_status()
+        llm_connected = engine_status.get("groq_ready") or engine_status.get("ollama_connected")
+
+        answer: str = ""
+        is_fallback = not llm_connected
+
+        if llm_connected:
+            system_prompt = (
+                f"You are the Nexora AI Assistant for an Enterprise Supply Chain Management System.\n"
+                f"Current User Role: {role}\n"
+                f"Style & Communication Guidelines:\n"
+                f"1. Use simple, familiar business language. Never use academic jargon like 'counterfactual neural twin', 'telemetry', or 'domain engine'.\n"
+                f"2. Answer the user's specific intent directly and concisely.\n"
+                f"3. Strictly base your answers on this verified operational database context:\n"
+                f"{json.dumps(context, default=str)}\n"
+                f"4. If no records match or data is unavailable, state that honestly without inventing numbers or dates.\n"
+                f"5. Maintain context for follow-up questions (such as supplier price vs lead time comparisons).\n"
+                f"6. State amounts in INR (₹) and lead times in days.\n"
+                f"7. Role Access Control: Never reveal competitor quotes to Suppliers, and never reveal confidential purchasing/supplier negotiations to Customers."
+            )
+
             try:
-                system_prompt = (
-                    f"You are the AI Assistant for an Enterprise Counterfactual Multi-Agent Supply Chain System.\n"
-                    f"User Role: {role}\n"
-                    f"Strict Rule: Always ground your answers in the following verified operational data:\n"
-                    f"{context}\n"
-                    f"Be concise, professional, and explain trade-offs transparently."
+                llm_res = CentralizedLLMService.generate(
+                    prompt=prompt,
+                    system_prompt=system_prompt,
+                    max_tokens=650,
+                    temperature=0.2,
+                    history=history
                 )
-                payload = {
-                    "model": settings.OLLAMA_MODEL,
-                    "prompt": f"{system_prompt}\n\nUser Question: {prompt}",
-                    "stream": False
-                }
-                resp = requests.post(f"{settings.OLLAMA_BASE_URL}/api/generate", json=payload, timeout=8.0)
-                if resp.status_code == 200:
-                    data = resp.json()
-                    answer = data.get("response", "").strip()
-                    if answer:
-                        return {
-                            "answer": answer,
-                            "model_used": f"Ollama ({settings.OLLAMA_MODEL})",
-                            "is_fallback": False,
-                            "context_retrieved": context,
-                            "suggested_actions": cls._get_suggested_actions(role, prompt, context)
-                        }
+                if llm_res.content and not llm_res.is_fallback:
+                    answer = llm_res.content.strip()
+                    is_fallback = False
             except Exception:
-                pass  # Fallback to heuristic engine
+                is_fallback = True
 
-        # Deterministic Domain Fallback Engine
-        return cls._generate_heuristic_response(prompt, role, context)
-
-    @classmethod
-    def _generate_heuristic_response(
-        cls,
-        prompt: str,
-        role: str,
-        context: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        p_lower = prompt.lower()
-        orders = context.get("orders", [])
-        inventory = context.get("inventory_alerts", [])
-        suppliers = context.get("top_suppliers", [])
-        cnt_rec = context.get("latest_cnt_recommendation", {})
-
-        answer_parts = []
-
-        if "simulation" in p_lower or "cnt" in p_lower or "recommend" in p_lower or "decision" in p_lower:
-            rec = cnt_rec.get("recommendation", "RETAIN")
-            justification = cnt_rec.get("justification", "Incumbent offers optimal risk-adjusted schedule compliance.")
-            answer_parts.append(
-                f"**Counterfactual Twin Analysis:** The decision module recommends **{rec}**.\n\n"
-                f"**Reasoning:** {justification}\n\n"
-                f"The CNT compared candidate suppliers against disruption stress-tests (+4d transit delay) "
-                f"and counterfactual price negotiations. Downstream delivery risk remains strictly monitored."
-            )
-        elif "shortage" in p_lower or "inventory" in p_lower or "stock" in p_lower:
-            if inventory:
-                shortage_items = [f"• **{item['product_name']}**: Available={item['available']} units (Shortage: {item['shortage']})" for item in inventory[:3]]
-                answer_parts.append(
-                    f"**Inventory Position:** Currently detected {len(inventory)} shortage requirement(s):\n" +
-                    "\n".join(shortage_items) +
-                    f"\n\nProcurement requests have been created by the Buyer Agent to source required units."
-                )
-            else:
-                answer_parts.append("All warehouse inventory levels are currently sufficient to support current scheduled production.")
-        elif "supplier" in p_lower or "quote" in p_lower or "price" in p_lower:
-            if suppliers:
-                top = suppliers[0]
-                answer_parts.append(
-                    f"**Supplier Performance:** Top ranked supplier is **{top['name']}** with multi-criteria score of {top.get('score', 92)}/100.\n"
-                    f"• Unit Price: ${top.get('price', 'N/A')}\n"
-                    f"• Delivery Lead Time: {top.get('lead_days', 7)} days\n"
-                    f"• Reliability: {int(top.get('reliability', 0.9)*100)}%\n"
-                    f"• Disruption Risk: {int(top.get('risk', 0.15)*100)}%"
-                )
-            else:
-                answer_parts.append("Candidate suppliers have submitted competitive quotes across required product categories.")
-        elif "order" in p_lower or "status" in p_lower or "delivery" in p_lower:
-            if orders:
-                ord_info = orders[0]
-                answer_parts.append(
-                    f"**Order Tracking:** Order #{ord_info.get('order_number', 'ORD-1001')} status is currently **{ord_info.get('status', 'AWAITING_APPROVAL')}**.\n"
-                    f"Required Quantity: {ord_info.get('quantity', 100)} units.\n"
-                    f"Target Delivery Date: {ord_info.get('target_date', 'Scheduled on-time')}."
-                )
-            else:
-                answer_parts.append("Your order is being processed according to the multi-agent fulfillment schedule.")
-        else:
-            answer_parts.append(
-                f"Hello! I am your Supply Chain Assistant. Based on current system state:\n"
-                f"• {len(orders)} active customer orders tracked\n"
-                f"• {len(inventory)} inventory alerts requiring procurement\n"
-                f"• Counterfactual Negotiation Twin active with deterministic scenario modeling.\n"
-                f"How can I assist your operational decisions today?"
-            )
+        # 3. Dynamic Deterministic Business Engine (When LLM is offline or returns fallback)
+        if not answer:
+            answer = cls._generate_business_response(prompt, role, context, history)
+            is_fallback = True
 
         return {
-            "answer": "\n\n".join(answer_parts),
-            "model_used": "Deterministic Heuristic Engine (Ollama Offline Fallback)",
-            "is_fallback": True,
+            "answer": answer,
+            "model_used": "AI Assistant",
+            "is_fallback": is_fallback,
             "context_retrieved": context,
             "suggested_actions": cls._get_suggested_actions(role, prompt, context)
         }
+
+    @classmethod
+    def _generate_business_response(
+        cls,
+        prompt: str,
+        role: str,
+        context: Dict[str, Any],
+        history: Optional[List[Dict[str, Any]]] = None
+    ) -> str:
+        """
+        Generates genuine, helpful, natural business responses directly from retrieved DB records.
+        Covers all required prompt scenarios with precise data formatting.
+        """
+        p_lower = prompt.lower()
+
+        # Scenario A: Pending Approvals
+        if "pending_approvals" in context:
+            approvals_data = context["pending_approvals"]
+            approvals = approvals_data.get("approvals", [])
+            total = len(approvals)
+
+            if total == 0:
+                return "There are currently no supplier decisions waiting for your approval."
+
+            req_list = ", ".join([a["order_number"] for a in approvals[:3]])
+            lines = [
+                f"There are **{total} supplier decision{'s' if total > 1 else ''} waiting for approval**. The request{'s are' if total > 1 else ' is'} **{req_list}**."
+            ]
+            for a in approvals[:3]:
+                lines.append(
+                    f"• **Order #{a['order_number']}** ({a['product_name']}): "
+                    f"Recommended supplier **{a['recommended_supplier']}** at {a['estimated_unit_price']}/unit "
+                    f"(Total: {a['total_estimated_cost']}). Delivery target: {a['target_delivery_date']}."
+                )
+            lines.append("\nWould you like to review and approve them on the **Waiting for Approval** page?")
+            return "\n".join(lines)
+
+        # Scenario B: Inventory Shortages
+        if "inventory" in context:
+            inv_data = context["inventory"]
+            items = inv_data.get("inventory", [])
+            shortages = [i for i in items if i.get("is_shortage")]
+
+            if not shortages:
+                return "All warehouse inventory levels are currently above minimum safety thresholds."
+
+            lines = [
+                f"We identified **{len(shortages)} inventory item(s) below required stock levels**:"
+            ]
+            for item in shortages[:4]:
+                lines.append(
+                    f"• **{item['product_name']}** (SKU: {item['sku']}): "
+                    f"Available: **{item['available']} units** | Minimum buffer: {item['required_minimum']} units "
+                    f"(Shortage: **{item['shortage']} units** — Status: **{item['urgency']}**)"
+                )
+            lines.append("\nPurchase requests have been queued to replenish required buffer stock.")
+            return "\n".join(lines)
+
+        # Scenario C: Supplier Comparison & Follow-up questions (Cheaper vs Delivery Time)
+        if "supplier_comparison" in context:
+            comp = context["supplier_comparison"]
+            if not comp.get("order_found"):
+                return comp.get("notice", "No active order quotations found for comparison.")
+
+            candidates = comp.get("candidates", [])
+            order_num = comp.get("order_number", "the active order")
+            prod_name = comp.get("product_name", "Components")
+
+            # Check if this is a follow-up asking about delivery time / speed
+            is_delivery_followup = any(w in p_lower for w in ["delivery", "time", "lead", "fast", "speed", "days", "when"])
+            # Check if this is asking about cheaper / price
+            is_price_inquiry = any(w in p_lower for w in ["cheap", "cheaper", "price", "cost", "lowest"])
+
+            if is_delivery_followup and not is_price_inquiry:
+                fastest = comp.get("fastest_supplier")
+                lead_days = comp.get("fastest_lead_days")
+                lines = [
+                    f"For **Order #{order_num}** ({prod_name}), **{fastest}** offers the fastest delivery time of **{lead_days} days**."
+                ]
+                for c in candidates:
+                    lines.append(f"• **{c['supplier_name']}**: {c['lead_days']} days lead time (Unit Price: ₹{c['unit_price']:,.2f})")
+                return "\n".join(lines)
+
+            if is_price_inquiry:
+                cheapest = comp.get("cheapest_supplier")
+                cheapest_price = comp.get("cheapest_price")
+                lines = [
+                    f"For **Order #{order_num}** ({prod_name}), **{cheapest}** is the cheapest option at **{cheapest_price}** per unit."
+                ]
+                for c in candidates:
+                    lines.append(f"• **{c['supplier_name']}**: ₹{c['unit_price']:,.2f} / unit (Lead time: {c['lead_days']} days)")
+                return "\n".join(lines)
+
+            # General comparison
+            lines = [
+                f"Here is the supplier comparison for **Order #{order_num}** ({prod_name}):"
+            ]
+            for c in candidates:
+                lines.append(
+                    f"• **{c['supplier_name']}**: ₹{c['unit_price']:,.2f} / unit | {c['lead_days']} days lead time | "
+                    f"{c['reliability_pct']}% on-time rating"
+                )
+            lines.append(
+                f"\n**Recommendation:** **{comp.get('cheapest_supplier')}** offers the best price ({comp.get('cheapest_price')}), "
+                f"while **{comp.get('fastest_supplier')}** provides the shortest delivery time ({comp.get('fastest_lead_days')} days)."
+            )
+            return "\n".join(lines)
+
+        # Scenario D: Purchase Orders
+        if "purchase_orders" in context:
+            po_data = context["purchase_orders"]
+            pos = po_data.get("purchase_orders", [])
+            if not pos:
+                return (
+                    "I couldn't find any purchase orders available to your account. "
+                    "You can create a purchase request or change your search filters."
+                )
+
+            lines = [f"You have **{len(pos)} purchase order(s)** recorded:"]
+            for po in pos[:3]:
+                supplier_info = f" from **{po['supplier_name']}**" if "supplier_name" in po else ""
+                lines.append(
+                    f"• **PO #{po['po_number']}**{supplier_info}: "
+                    f"{po['quantity']} units for {po['total_amount']} | Status: **{po['status']}** "
+                    f"(Expected Delivery: {po['expected_delivery_date']})"
+                )
+            return "\n".join(lines)
+
+        # Scenario E: Order Tracking
+        if "orders" in context:
+            ord_data = context["orders"]
+            orders = ord_data.get("orders", [])
+            if not orders:
+                return "I couldn't find any orders matching your request. Please verify the order number."
+
+            lines = [f"Found **{len(orders)} order(s)**:"]
+            for o in orders[:3]:
+                delay_str = " (Delayed)" if o.get("is_delayed") else " (On Schedule)"
+                lines.append(
+                    f"• **Order #{o['order_number']}** ({o['product_name']}): "
+                    f"Status is **{o['status']}**{delay_str}. "
+                    f"Expected delivery: **{o['target_delivery_date']}**."
+                )
+            return "\n".join(lines)
+
+        # Default fallback: Concise, professional response based on role
+        if role == "CUSTOMER":
+            return "I can help you track your shipments, view delivery schedules, and check order statuses. How can I assist you today?"
+        elif role == "SUPPLIER":
+            return "I can help you check active purchase orders, review quotation requests, and verify delivery lead times. What would you like to review?"
+        else:
+            return "I can help you track customer orders, compare supplier quotations, review pending approvals, and check inventory stock. What would you like to know?"
 
     @staticmethod
     def _get_suggested_actions(role: str, prompt: str, context: Dict[str, Any]) -> List[str]:
         if role == "ADMIN":
             return [
-                "Review pending supplier approvals",
-                "Trigger Counterfactual Twin stress-test",
-                "Inspect AI Agent execution logs"
+                "Which decisions need approval?",
+                "Show suppliers that need attention.",
+                "Summarize recent system issues."
             ]
         elif role == "PROCUREMENT":
             return [
-                "Generate RFQ for shortage products",
-                "Submit counteroffer via AI Negotiation Agent",
-                "Approve top ranked supplier quotation"
+                "Which requests need suppliers?",
+                "Compare quotations for an order.",
+                "Show inventory shortages.",
+                "Explain the latest supplier recommendation."
             ]
         elif role == "SUPPLIER":
             return [
-                "Submit revised quotation",
-                "Review buyer counteroffer",
-                "Dispatch purchase order shipment"
+                "Which quotation requests need my response?",
+                "Show my open purchase orders.",
+                "Which deliveries need an update?"
             ]
         else:
             return [
-                "Check delivery timeline",
-                "Submit order satisfaction feedback",
-                "Download customer order summary"
+                "Track my order.",
+                "Show my recent orders.",
+                "When is my next delivery expected?"
             ]

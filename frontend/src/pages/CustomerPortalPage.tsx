@@ -103,7 +103,7 @@ export const CustomerPortalPage: React.FC = () => {
                 </div>
                 <div className="flex justify-between items-center text-[11px] text-[#6B7280] mt-2 pt-1 border-t border-[#F3F4F6]">
                   <span>Target: {new Date(o.target_delivery_date).toLocaleDateString()}</span>
-                  <span className="font-bold text-[#111827] font-mono">${o.max_budget.toLocaleString()}</span>
+                  <span className="font-bold text-[#111827] font-mono">₹{o.max_budget.toLocaleString('en-IN')}</span>
                 </div>
               </button>
             ))}
